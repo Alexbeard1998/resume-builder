@@ -37,6 +37,7 @@ export interface ResumeState {
   education: EducationItem[];
   skills: string[];
   loadingStatus: "idle" | "loading" | "succeeded" | "failed";
+  savingStatus: "idle" | "saving" | "succeeded" | "failed";
   publishStatus: "draft" | "published" | "public";
   // error — сообщение об ошибке (для UI)
   error: string | null;
@@ -63,6 +64,7 @@ const createInitialState = (): ResumeState => ({
   education: [],
   skills: [],
   loadingStatus: "idle",
+  savingStatus: "idle",
   publishStatus: "draft",
   error: null,
   isDirty: false,
@@ -184,11 +186,9 @@ const resumeSlice = createSlice({
         value: string;
       }>,
     ) => {
-
       const { field, value } = action.payload;
       state.personalInfo[field] = value;
       state.isDirty = true;
-
     },
 
     // --- Добавление нового опыта работы ---
@@ -307,6 +307,7 @@ const resumeSlice = createSlice({
         state.skills = action.payload.skills;
         state.publishStatus = action.payload.publishStatus || "draft"; // ← Новое
         state.loadingStatus = "succeeded";
+        state.savingStatus = "idle";
         state.error = null;
         // После загрузки с сервера — нет несохранённых изменений
         state.isDirty = false;
@@ -323,11 +324,11 @@ const resumeSlice = createSlice({
 
       // ===== saveResume =====
       .addCase(saveResume.pending, (state) => {
-        state.loadingStatus = "loading";
+        state.savingStatus = "saving";
         state.error = null;
       })
       .addCase(saveResume.fulfilled, (state, action) => {
-        state.loadingStatus = "succeeded";
+        state.savingStatus = "succeeded";
         state.error = null;
         // Данные сохранены — сбрасываем флаг
         state.isDirty = false;
@@ -342,7 +343,7 @@ const resumeSlice = createSlice({
         }
       })
       .addCase(saveResume.rejected, (state, action) => {
-        state.loadingStatus = "failed";
+        state.savingStatus = "failed";
         state.error = action.error.message || "Ошибка сохранения";
         // isDirty НЕ сбрасываем — данные всё ещё не сохранены
       })

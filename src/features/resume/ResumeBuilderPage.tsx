@@ -25,7 +25,6 @@ import { Modal } from "../../components/ui/Modal";
 import { useToast } from "../../components/ui/ToastContext";
 import { withToast } from "../../utils/withToast";
 
-
 type Section = "personal" | "experience" | "education" | "skills";
 
 const SECTIONS = [
@@ -73,7 +72,7 @@ export const ResumeBuilderPage = () => {
   useEffect(() => {
     if (!resumeId) return;
     if (!resume.isDirty) return;
-    if (resume.loadingStatus === "loading") return;
+     if (resume.savingStatus === "saving") return;
 
     // Сбрасываем предыдущий таймер
     if (saveTimeoutRef.current) {
@@ -95,7 +94,7 @@ export const ResumeBuilderPage = () => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [resume.isDirty, resume.loadingStatus, resumeId, dispatch, showToast]);
+  }, [resume.isDirty, resume.savingStatus, resumeId, dispatch, showToast]);
 
   // ===== 3. Предупреждение при закрытии вкладки =====
   useEffect(() => {
@@ -254,7 +253,12 @@ export const ResumeBuilderPage = () => {
           <Button variant="danger" onClick={() => setIsDeleteModalOpen(true)}>
             Удалить
           </Button>
-          <Button onClick={handleSave}>Сохранить</Button>
+          <Button
+            onClick={handleSave}
+            isLoading={resume.savingStatus === "saving"}
+          >
+            {resume.savingStatus === "saving" ? "Сохранение..." : "Сохранить"}
+          </Button>
         </div>
       </header>
 

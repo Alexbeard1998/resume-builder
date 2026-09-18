@@ -42,7 +42,6 @@ export const DashboardPage = () => {
       setResumeToDelete(null);
     }
   };
- 
 
   const handleShare = (username: string) => {
     const url = `${window.location.origin}/view/${username}`;
@@ -73,7 +72,7 @@ export const DashboardPage = () => {
 
       {/* Контент */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-      {status === "loading" && <DashboardSkeleton />}
+        {status === "loading" && <DashboardSkeleton />}
 
         {status === "failed" && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -90,7 +89,7 @@ export const DashboardPage = () => {
           </div>
         )}
 
-        {resumes.length > 0 && (
+        {status === "succeeded" && resumes.length > 0 && (
           <>
             {/* Статистика */}
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -160,7 +159,6 @@ export const DashboardPage = () => {
 
                   {/* Кнопки управления */}
                   <div className="flex flex-col gap-2 mt-auto">
-                  
                     {/* Действия */}
                     <div className="flex gap-3 flex-wrap">
                       <button

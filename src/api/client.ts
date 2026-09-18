@@ -1,9 +1,12 @@
+import { ApiError } from "./ApiError";
 const API_URL = "http://localhost:3001/api";
 
 const getAccessToken = () => localStorage.getItem("accessToken");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-import { ApiError } from "./ApiError";
+
+
+
 
 async function handleResponse(res: Response) {
   if (!res.ok) {
@@ -21,26 +24,33 @@ async function handleResponse(res: Response) {
   return res.json();
 }
 
-// Функция для обновления токена
-async function refreshAccessToken() {
-  const refreshToken = getRefreshToken();
+let refreshPromise: Promise<string> | null = null;
 
-  if (!refreshToken) {
-    throw new Error("Нет refresh token");
-  }
+async function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise;
 
-  const res = await fetch(`${API_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
-  });
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) throw new Error('Нет refresh token');
 
-  const data = await handleResponse(res);
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
 
-  localStorage.setItem("accessToken", data.accessToken);
-  localStorage.setItem("refreshToken", data.refreshToken);
+      const data = await handleResponse(res);
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
 
-  return data.accessToken;
+      return data.accessToken;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 // Обёртка для fetch с автоматическим обновлением
@@ -70,7 +80,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
       throw new Error("Сессия истекла", { cause: error });
     }
   }
