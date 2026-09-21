@@ -150,6 +150,52 @@ app.post("/api/auth/refresh", async (req, res) => {
   }
 });
 
+// Публичный список резюме (для каталога)
+app.get('/api/public/resumes', async (req, res) => {
+  try {
+    const resumes = await prisma.resume.findMany({
+      where: {
+        status: 'public',  // ← Только резюме в каталоге
+      },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            name: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    // Парсим JSON-поля и формируем краткие данные для карточек
+    const parsedResumes = resumes.map((resume) => {
+      const personalInfo = JSON.parse(resume.personalInfo);
+      const skills = JSON.parse(resume.skills);
+      
+      return {
+        id: resume.id,
+        title: resume.title,
+        // Для карточки — только нужные поля
+        fullName: personalInfo.fullName || resume.user.name,
+        location: personalInfo.location || '',
+        summary: personalInfo.summary || '',
+        skills: skills.slice(0, 5),  // Первые 5 навыков
+        updatedAt: resume.updatedAt,
+        user: {
+          name: resume.user.name,
+          username: resume.user.username,
+        },
+      };
+    });
+
+    res.json(parsedResumes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 // Публичный маршрут для просмотра резюме
 app.get("/api/public/resume/:username", async (req, res) => {
   try {

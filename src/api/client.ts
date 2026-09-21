@@ -4,10 +4,6 @@ const API_URL = "http://localhost:3001/api";
 const getAccessToken = () => localStorage.getItem("accessToken");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-
-
-
-
 async function handleResponse(res: Response) {
   if (!res.ok) {
     let errorMessage = `Ошибка ${res.status}`;
@@ -32,17 +28,17 @@ async function refreshAccessToken(): Promise<string> {
   refreshPromise = (async () => {
     try {
       const refreshToken = getRefreshToken();
-      if (!refreshToken) throw new Error('Нет refresh token');
+      if (!refreshToken) throw new Error("Нет refresh token");
 
       const res = await fetch(`${API_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),
       });
 
       const data = await handleResponse(res);
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
 
       return data.accessToken;
     } finally {
@@ -153,6 +149,11 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    return handleResponse(res);
+  },
+
+  async getPublicResumes() {
+    const res = await fetch(`${API_URL}/public/resumes`);
     return handleResponse(res);
   },
 

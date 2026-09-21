@@ -102,6 +102,7 @@ export const LoginPage = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="myusername"
+                autoComplete="off"
                 required
               />
               <Input
@@ -109,6 +110,7 @@ export const LoginPage = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ваше имя"
+                autoComplete="name"
                 required
               />
             </>
@@ -120,6 +122,7 @@ export const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="ivan@example.com"
+            autoComplete="username"
             required
           />
 
@@ -129,6 +132,7 @@ export const LoginPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Минимум 6 символов"
+            autoComplete={isRegisterMode ? "new-password" : "current-password"}
             required
           />
 

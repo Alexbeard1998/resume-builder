@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { logoutUser } from "../auth/authSlice";
 import { fetchResumes } from "./dashboardSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { useToast } from "../../components/ui/ToastContext";
 import { DashboardSkeleton } from "../../components/ui/Skeleton";
@@ -27,7 +27,7 @@ export const DashboardPage = () => {
   const handleLogout = async () => {
     await dispatch(logoutUser());
     showToast("Вы вышли из аккаунта", "info");
-    navigate("/login");
+    navigate("/");
   };
   const handleDelete = async () => {
     if (!resumeToDelete) return;
@@ -58,17 +58,23 @@ export const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Шапка */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Мои резюме</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">{user?.email}</span>
-            <Button variant="danger" size="sm" onClick={handleLogout}>
-              Выйти
-            </Button>
-          </div>
-        </div>
-      </header>
+<header className="bg-white shadow-sm">
+  <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <h1 className="text-xl font-bold text-gray-800">Мои резюме</h1>
+    <div className="flex items-center gap-4">
+      <Link
+        to="/explore"
+        className="text-sm text-blue-500 hover:text-blue-700 font-medium"
+      >
+        Каталог
+      </Link>
+      <span className="text-gray-600">{user?.email}</span>
+      <Button variant="danger" size="sm" onClick={handleLogout}>
+        Выйти
+      </Button>
+    </div>
+  </div>
+</header>
 
       {/* Контент */}
       <main className="max-w-6xl mx-auto px-4 py-8">
