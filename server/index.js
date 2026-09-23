@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
@@ -151,13 +153,13 @@ app.post("/api/auth/refresh", async (req, res) => {
 });
 
 // Публичный список резюме (для каталога)
-app.get('/api/public/resumes', async (req, res) => {
+app.get("/api/public/resumes", async (req, res) => {
   try {
     const resumes = await prisma.resume.findMany({
       where: {
-        status: 'public',  // ← Только резюме в каталоге
+        status: "public", // ← Только резюме в каталоге
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { updatedAt: "desc" },
       include: {
         user: {
           select: {
@@ -172,15 +174,15 @@ app.get('/api/public/resumes', async (req, res) => {
     const parsedResumes = resumes.map((resume) => {
       const personalInfo = JSON.parse(resume.personalInfo);
       const skills = JSON.parse(resume.skills);
-      
+
       return {
         id: resume.id,
         title: resume.title,
         // Для карточки — только нужные поля
         fullName: personalInfo.fullName || resume.user.name,
-        location: personalInfo.location || '',
-        summary: personalInfo.summary || '',
-        skills: skills.slice(0, 5),  // Первые 5 навыков
+        location: personalInfo.location || "",
+        summary: personalInfo.summary || "",
+        skills: skills.slice(0, 5), // Первые 5 навыков
         updatedAt: resume.updatedAt,
         user: {
           name: resume.user.name,
@@ -192,7 +194,7 @@ app.get('/api/public/resumes', async (req, res) => {
     res.json(parsedResumes);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 

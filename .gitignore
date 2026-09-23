@@ -45,6 +45,8 @@ Thumbs.db
 # Переменные окружения
 .env
 .env.local
+.env.*.local
+server/.env   
 
 # Vite
 .vite/
