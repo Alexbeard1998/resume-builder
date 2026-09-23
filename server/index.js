@@ -9,8 +9,8 @@ const bcrypt = require("bcryptjs");
 const app = express();
 const prisma = new PrismaClient();
 
-const JWT_SECRET = "your-secret-key-change-in-production";
-const REFRESH_SECRET = "your-refresh-secret-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET
 
 app.use(cors());
 app.use(express.json());
