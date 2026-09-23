@@ -1,9 +1,10 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -69,8 +70,10 @@ app.post("/api/auth/register", async (req, res) => {
         .json({ error: "Пользователь или username уже существует" });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
-      data: { email, password, name, username },
+      data: { email, password: hashedPassword, name, username },
     });
 
     const { accessToken, refreshToken } = generateTokens(user);
@@ -100,7 +103,8 @@ app.post("/api/auth/login", async (req, res) => {
       where: { email },
     });
 
-    if (!user || user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!user || !isPasswordValid) {
       return res.status(401).json({ error: "Неверный email или пароль" });
     }
 
