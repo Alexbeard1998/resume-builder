@@ -28,27 +28,46 @@ const initialState: AuthState = {
 
 export const loginUser = createAsyncThunk(
   "auth/login",
-  async (credentials: { email: string; password: string }) => {
-    const response = await api.login(credentials.email, credentials.password);
-    return response;
+  async (
+    credentials: { email: string; password: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await api.login(credentials.email, credentials.password);
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue("Неизвестная ошибка");
+    }
   },
 );
-
 export const registerUser = createAsyncThunk(
   "auth/register",
-  async (credentials: {
-    email: string;
-    password: string;
-    name: string;
-    username: string;
-  }) => {
-    const response = await api.register(
-      credentials.email,
-      credentials.password,
-      credentials.name,
-      credentials.username,
-    );
-    return response;
+  async (
+    credentials: {
+      email: string;
+      password: string;
+      name: string;
+      username: string;
+    },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await api.register(
+        credentials.email,
+        credentials.password,
+        credentials.name,
+        credentials.username,
+      );
+      return response;
+    } catch (error) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue("Неизвестная ошибка");
+    }
   },
 );
 
@@ -87,7 +106,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.error.message || "Ошибка входа";
+        state.error =
+          (action.payload as string) || action.error.message || "Ошибка входа";
       })
       // Register
       .addCase(registerUser.pending, (state) => {
@@ -104,7 +124,10 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.error.message || "Ошибка регистрации";
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Ошибка регистрации";
       })
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
