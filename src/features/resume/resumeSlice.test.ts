@@ -317,22 +317,24 @@ describe('resumeSlice', () => {
       expect(resetState.id).toBeNull();
     });
 
-    it('не должен мутировать исходный initialState', () => {
-      const state1 = createTestState();
-      const state2 = createTestState();
+  it('не должен мутировать исходный initialState', () => {
+  const state1 = createTestState();
+  const state2 = createTestState();
 
-      // Меняем state1
-      const changed = resumeReducer(state1, updateTitle('Изменённый'));
+  // Меняем state1
+  const changed = resumeReducer(state1, updateTitle('Изменённый'));
+  expect(changed.title).toBe('Изменённый');  // ← добавили
 
-      // Сбрасываем state2
-      const reset = resumeReducer(state2, resetResume());
+  // Сбрасываем state2
+  const reset = resumeReducer(state2, resetResume());
 
-      // Меняем reset
-      const changedReset = resumeReducer(reset, updateTitle('После сброса'));
+  // Меняем reset
+  const changedReset = resumeReducer(reset, updateTitle('После сброса'));
+  expect(changedReset.title).toBe('После сброса');  // ← добавили
 
-      // Проверяем, что state2 не изменился
-      expect(state2.title).toBe('Тестовое резюме');
-    });
+  // Проверяем, что state2 не изменился
+  expect(state2.title).toBe('Тестовое резюме');
+});
   });
 
   // ----- Иммутабельность -----
