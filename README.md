@@ -1,75 +1,130 @@
-# React + TypeScript + Vite
+# Resume Builder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Full-stack приложение для создания, редактирования и публикации резюме.
 
-Currently, two official plugins are available:
+🌐 Live Demo: https://resume-builder-alexbeard.vercel.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Стек
 
-## React Compiler
+### Frontend
+- React 18 + Vite
+- TypeScript
+- Redux Toolkit
+- React Router
+- Tailwind CSS
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Backend
+- Node.js + Express
+- Prisma ORM
+- PostgreSQL (Supabase)
+- JWT + bcrypt
 
-## Expanding the ESLint configuration
+### Инфраструктура
+- Vercel (frontend)
+- Railway (backend)
+- Supabase (database)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Возможности
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- 🔐 Авторизация (JWT + refresh tokens)
+- 📝 CRUD резюме (личные данные, опыт, образование, навыки)
+- 🎨 Живой предпросмотр
+- 🔄 Drag & Drop для сортировки опыта
+- 💾 Автосохранение (debounce)
+- 📢 Три статуса: черновик / по ссылке / в каталоге
+- 🌐 Публичная страница резюме (/view/:username)
+- 🔍 Каталог публичных резюме
+- 🔒 Хеширование паролей (bcrypt)
+- ✅ Покрытие тестами (Vitest + RTL)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Скриншоты
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+![Дашборд](./screenshots/dashboard.png)
+![Редактор](./screenshots/builder.png)
+![Каталог](./screenshots/explore.png)
 
+
+## Локальный запуск
+
+### 1. Клонировать репозиторий
+```bash
+git clone https://github.com/Alexbeard1998/resume-builder.git
+cd resume-builder
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Установить зависимости
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Frontend:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
 ```
+
+Backend:
+
+```bash
+cd server
+npm install
+```
+
+### 3. Настроить переменные окружения
+
+Корень (.env.local):
+
+```text
+VITE_API_URL=http://localhost:3001/api
+```
+
+Сервер (server/.env):
+
+```text
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+JWT_SECRET="..."
+REFRESH_SECRET="..."
+PORT=3001
+```
+
+### 4. Применить миграции
+
+```bash
+cd server
+npx prisma migrate dev
+```
+
+### 5. Запустить
+Backend (терминал 1):
+
+```bash
+cd server
+npm run dev
+```
+Frontend (терминал 2):
+
+```bash
+npm run dev
+Открыть http://localhost:5173
+```
+
+### Тесты
+
+```bash
+npm run test:run
+```
+
+### Структура проекта
+```text
+resume-builder/
+├── src/                     # Frontend
+│   ├── app/                 # Store, router
+│   ├── components/          # UI-компоненты
+│   ├── features/            # Redux-слайсы по фичам
+│   ├── api/                 # HTTP-клиент
+│   └── utils/               # Хелперы
+└── server/                  # Backend
+    ├── prisma/              # Схема БД
+    └── index.js             # Express-сер
+```
+
+### Лицензия
+MIT
