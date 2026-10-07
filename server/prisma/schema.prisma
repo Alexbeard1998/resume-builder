@@ -22,12 +22,14 @@ model User {
 model Resume {
   id           String   @id @default(cuid())
   title        String
+  fullName     String   @default("")
+  location     String   @default("")  
   personalInfo String
   experience   String
   education    String
   skills       String
-  userId       String
   status       String   @default("draft")
+  userId       String
   user         User     @relation(fields: [userId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -18,8 +18,17 @@ export interface PublicResumeSummary {
   };
 }
 
+export type SortOption = "newest" | "oldest" | "nameAsc" | "nameDesc";
 interface ExploreState {
   resumes: PublicResumeSummary[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  search: string;
+  location: string;
+  sort: SortOption;
+  locations: string[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -27,18 +36,49 @@ interface ExploreState {
 // ===== НАЧАЛЬНОЕ СОСТОЯНИЕ =====
 const initialState: ExploreState = {
   resumes: [],
+  page: 1,
+  limit: 12,
+  total: 0,
+  totalPages: 0,
+  search: "",
+  location: "",
+  sort: "newest",
+  locations: [],
   status: "idle",
   error: null,
 };
 
 // ===== АСИНХРОННЫЕ ЭКШЕНЫ =====
 
-// Загрузка списка публичных резюме
-export const fetchPublicResumes = createAsyncThunk(
+// Загрузка списка публичных резюме с пагинацией
+export const fetchPublicResumes = createAsyncThunk<
+  {
+    resumes: PublicResumeSummary[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  },
+  {
+    page?: number;
+    limit?: number;
+    search?: string;
+    location?: string;
+    sort?: SortOption;
+  } | undefined
+>(
   "explore/fetchPublicResumes",
-  async () => {
-    return api.getPublicResumes();
+  async (args = {}) => {
+    const { page = 1, limit = 12, search = "", location = "", sort = "newest" } = args;
+    return api.getPublicResumes(page, limit, search, location, sort);
   }
+);
+// Загрузка списка уникальных локаций
+export const fetchLocations = createAsyncThunk(
+  "explore/fetchLocations",
+  async () => {
+    return api.getPublicLocations();
+  },
 );
 
 // ===== СЛАЙС =====
@@ -52,18 +92,32 @@ const exploreSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ===== fetchPublicResumes =====
       .addCase(fetchPublicResumes.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
       .addCase(fetchPublicResumes.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.resumes = action.payload;
+        state.resumes = action.payload.resumes;
+        state.page = action.payload.page;
+        state.limit = action.payload.limit;
+        state.total = action.payload.total;
+        state.totalPages = action.payload.totalPages;
       })
       .addCase(fetchPublicResumes.rejected, (state, action) => {
+        if (action.error.name === "AbortError") {
+          return;
+        }
         state.status = "failed";
         state.error = action.error.message || "Ошибка загрузки каталога";
+      })
+
+      // ===== fetchLocations =====
+      .addCase(fetchLocations.fulfilled, (state, action) => {
+        state.locations = action.payload;
       });
+    // При ошибке локаций — молча игнорируем (не критично)
   },
 });
 

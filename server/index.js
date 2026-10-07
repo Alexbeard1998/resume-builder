@@ -162,26 +162,91 @@ app.post("/api/auth/refresh", async (req, res) => {
     return res.status(401).json({ error: "Недействительный refresh token" });
   }
 });
+// Список уникальных локаций из публичных резюме
+app.get("/api/public/locations", async (req, res) => {
+  try {
+    const resumes = await prisma.resume.findMany({
+      where: {
+        status: "public",
+        location: { not: "" },
+      },
+      select: { location: true },
+      distinct: ["location"],
+      orderBy: { location: "asc" },
+    });
+
+    const locations = resumes.map((r) => r.location);
+
+    res.json(locations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+// Маппинг сортировки
+function getOrderBy(sort) {
+  switch (sort) {
+    case 'oldest':
+      return { updatedAt: 'asc' };
+    case 'nameAsc':
+      return { fullName: 'asc' };
+    case 'nameDesc':
+      return { fullName: 'desc' };
+    case 'newest':
+    default:
+      return { updatedAt: 'desc' };
+  }
+}
 
 // Публичный список резюме (для каталога)
 app.get("/api/public/resumes", async (req, res) => {
   try {
-    const resumes = await prisma.resume.findMany({
-      where: {
-        status: "public", // ← Только резюме в каталоге
-      },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            username: true,
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 12));
+    const skip = (page - 1) * limit;
+    const search = (req.query.search || "").trim();
+    const location = (req.query.location || '').trim();
+    const sort = req.query.sort || 'newest';
+
+    // Базовый фильтр: только public
+    const where = { status: "public" };
+
+    if (search) {
+      where.OR = [
+        {
+          title: {
+            contains: search,
+            mode: "insensitive",
           },
         },
-      },
-    });
+        {
+          fullName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
 
-    // Парсим JSON-поля и формируем краткие данные для карточек
+    if (location) {
+      where.location = location;
+    }
+    const [resumes, total] = await Promise.all([
+      prisma.resume.findMany({
+        where,
+        orderBy: getOrderBy(sort), 
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: { name: true, username: true },
+          },
+        },
+      }),
+      prisma.resume.count({ where }),
+    ]);
+
     const parsedResumes = resumes.map((resume) => {
       const personalInfo = JSON.parse(resume.personalInfo);
       const skills = JSON.parse(resume.skills);
@@ -189,11 +254,10 @@ app.get("/api/public/resumes", async (req, res) => {
       return {
         id: resume.id,
         title: resume.title,
-        // Для карточки — только нужные поля
         fullName: personalInfo.fullName || resume.user.name,
         location: personalInfo.location || "",
         summary: personalInfo.summary || "",
-        skills: skills.slice(0, 5), // Первые 5 навыков
+        skills: skills.slice(0, 5),
         updatedAt: resume.updatedAt,
         user: {
           name: resume.user.name,
@@ -202,7 +266,13 @@ app.get("/api/public/resumes", async (req, res) => {
       };
     });
 
-    res.json(parsedResumes);
+    res.json({
+      resumes: parsedResumes,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Ошибка сервера" });
@@ -313,16 +383,18 @@ app.get("/api/resumes/:id", authMiddleware, async (req, res) => {
 // Создание резюме
 app.post("/api/resumes", authMiddleware, async (req, res) => {
   try {
-    const { title, personalInfo, experience, education, skills } = req.body;
+    const { title, personalInfo, experience, education, skills, status } = req.body;
 
     const resume = await prisma.resume.create({
       data: {
         title,
+        fullName: personalInfo.fullName || "",
+        location: personalInfo.location || "",
         personalInfo: JSON.stringify(personalInfo),
         experience: JSON.stringify(experience),
         education: JSON.stringify(education),
         skills: JSON.stringify(skills),
-        status: "draft",
+        status: status || "draft",
         userId: req.userId,
       },
     });
@@ -337,7 +409,7 @@ app.post("/api/resumes", authMiddleware, async (req, res) => {
 app.put("/api/resumes/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, personalInfo, experience, education, skills } = req.body;
+    const { title, personalInfo, experience, education, skills, status } = req.body;
 
     // Проверяем владельца
     const existingResume = await prisma.resume.findUnique({ where: { id } });
@@ -350,6 +422,8 @@ app.put("/api/resumes/:id", authMiddleware, async (req, res) => {
       where: { id },
       data: {
         title,
+        fullName: personalInfo.fullName || "",
+        location: personalInfo.location || "",
         personalInfo: JSON.stringify(personalInfo),
         experience: JSON.stringify(experience),
         education: JSON.stringify(education),

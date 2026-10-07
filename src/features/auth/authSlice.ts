@@ -18,10 +18,14 @@ interface AuthState {
 
 // Проверяем localStorage при инициализации
 const savedUser = localStorage.getItem("user");
+const savedToken = localStorage.getItem("accessToken");
+
+// Считаем авторизованным, только если есть И user, И accessToken
+const isAuth = !!savedUser && !!savedToken;
 
 const initialState: AuthState = {
   user: savedUser ? JSON.parse(savedUser) : null,
-  isAuthenticated: !!savedUser,
+  isAuthenticated: isAuth,
   status: "idle",
   error: null,
 };

@@ -1,5 +1,5 @@
 import { ApiError } from "./ApiError";
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const getAccessToken = () => localStorage.getItem("accessToken");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
@@ -84,6 +84,9 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   return res;
 }
 
+// Хранит AbortController для текущего запроса поиска
+let resumesAbortController: AbortController | null = null;
+
 export const api = {
   async register(
     email: string,
@@ -152,8 +155,51 @@ export const api = {
     return handleResponse(res);
   },
 
-  async getPublicResumes() {
-    const res = await fetch(`${API_URL}/public/resumes`);
+  async getPublicResumes(
+    page = 1,
+    limit = 12,
+    search = "",
+    location = "",
+    sort = "newest",
+  ) {
+    if (resumesAbortController) {
+      resumesAbortController.abort();
+    }
+
+    const controller = new AbortController();
+    resumesAbortController = controller;
+
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+
+    if (search.trim()) {
+      params.set("search", search.trim());
+    }
+
+    if (location.trim()) {
+      params.set("location", location.trim());
+    }
+
+    if (sort && sort !== "newest") {
+      params.set("sort", sort);
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/public/resumes?${params}`, 
+        {
+        signal: controller.signal,}
+      );
+      return handleResponse(res);
+    } finally {
+      if (resumesAbortController === controller) {
+        resumesAbortController = null;
+      }
+    }
+  },
+  async getPublicLocations() {
+    const res = await fetch(`${API_URL}/public/locations`);
     return handleResponse(res);
   },
 
