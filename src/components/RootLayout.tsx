@@ -1,14 +1,15 @@
-import { Outlet } from 'react-router-dom';
-import { AuthListener } from './AuthListener';
+import { Outlet } from "react-router-dom";
+import { AuthListener } from "./AuthListener";
+import { ThemeToggle } from "./ui/ThemeToggle";
 
-/**
- * Root layout — обёртка для всех страниц.
- * Рендерит AuthListener (слушает истечение токена) и текущую страницу.
- */
 export const RootLayout = () => {
   return (
     <>
       <AuthListener />
+      {/* Глобальная кнопка темы — фиксированная в правом нижнем углу */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       <Outlet />
     </>
   );
