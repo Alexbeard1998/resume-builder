@@ -7,7 +7,6 @@ import {
   type SortOption,
 } from "./exploreSlice";
 import { ExploreSkeleton } from "../../components/ui/Skeleton";
-import { ThemeToggle } from "../../components/ui/ThemeToggle";
 
 export const ExplorePage = () => {
   const dispatch = useAppDispatch();

@@ -72,7 +72,7 @@ export const ResumeBuilderPage = () => {
   useEffect(() => {
     if (!resumeId) return;
     if (!resume.isDirty) return;
-     if (resume.savingStatus === "saving") return;
+    if (resume.savingStatus === "saving") return;
 
     // Сбрасываем предыдущий таймер
     if (saveTimeoutRef.current) {
@@ -194,10 +194,10 @@ export const ResumeBuilderPage = () => {
 
   if (resumeId && resume.loadingStatus === "loading") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4" />
-          <p className="text-gray-500">Загрузка резюме...</p>
+          <p className="text-gray-500 dark:text-gray-400">Загрузка резюме...</p>
         </div>
       </div>
     );
@@ -206,9 +206,9 @@ export const ResumeBuilderPage = () => {
   // Если ошибка 404 — показываем заглушку (не рендерим форму)
   if (resume.loadingStatus === "failed") {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 dark:bg-black flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500">Резюме не найдено</p>
+          <p className="text-gray-500 dark:text-gray-400">Резюме не найдено</p>
           <p className="text-sm text-gray-400 mt-2">Перенаправление...</p>
         </div>
       </div>
@@ -216,9 +216,9 @@ export const ResumeBuilderPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col">
       {/* Шапка */}
-      <header className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate("/")}>
             ← Назад
@@ -226,10 +226,12 @@ export const ResumeBuilderPage = () => {
           <input
             value={resume.title}
             onChange={(e) => dispatch(updateTitle(e.target.value))}
-            className="text-xl font-bold text-gray-800 bg-transparent border-b border-transparent focus:border-blue-500 focus:outline-none px-2 py-1"
+            className="text-xl font-bold text-gray-800 dark:text-white bg-transparent border-b border-transparent focus:border-blue-500 focus:outline-none px-2 py-1"
           />
           {resume.isDirty && (
-            <span className="text-xs text-gray-400">• не сохранено</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              • не сохранено
+            </span>
           )}
         </div>
         <div className="flex gap-3 items-center">
@@ -242,7 +244,7 @@ export const ResumeBuilderPage = () => {
                   e.target.value as "draft" | "published" | "public",
                 )
               }
-              className="text-sm px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             >
               <option value="draft">Черновик</option>
               <option value="published">Опубликовано по ссылке</option>
@@ -265,7 +267,7 @@ export const ResumeBuilderPage = () => {
       {/* Основной контент */}
       <div className="flex flex-1 overflow-hidden">
         {/* Левая панель */}
-        <aside className="w-64 bg-white border-r border-gray-200 p-4">
+        <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-4">
           <nav className="space-y-2">
             {SECTIONS.map((section) => (
               <button
@@ -273,8 +275,8 @@ export const ResumeBuilderPage = () => {
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full text-left px-4 py-2 rounded transition-colors ${
                   activeSection === section.id
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
                 {section.label}
@@ -287,7 +289,7 @@ export const ResumeBuilderPage = () => {
         <main className="flex-1 overflow-y-auto p-6">
           {activeSection === "personal" && (
             <section className="max-w-2xl space-y-4">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                 Личная информация
               </h2>
               <Input
@@ -358,7 +360,7 @@ export const ResumeBuilderPage = () => {
           {activeSection === "experience" && (
             <section className="max-w-2xl">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
                   Опыт работы
                 </h2>
                 <Button
@@ -376,7 +378,7 @@ export const ResumeBuilderPage = () => {
           {activeSection === "education" && (
             <section className="max-w-2xl">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
                   Образование
                 </h2>
                 <Button
@@ -389,9 +391,9 @@ export const ResumeBuilderPage = () => {
               </div>
               <div className="space-y-4">
                 {resume.education.map((edu) => (
-                  <div key={edu.id} className="border rounded p-4 bg-white">
+                  <div key={edu.id} className="card">
                     <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-medium text-gray-700">
+                      <h3 className="font-medium text-gray-700 dark:text-gray-300">
                         Учебное заведение
                       </h3>
                       <Button
@@ -446,7 +448,7 @@ export const ResumeBuilderPage = () => {
                   </div>
                 ))}
                 {resume.education.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
+                 <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                     Пока нет образования. Нажмите "Добавить".
                   </p>
                 )}
@@ -457,7 +459,9 @@ export const ResumeBuilderPage = () => {
           {activeSection === "skills" && (
             <section className="max-w-2xl">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">Навыки</h2>
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  Навыки
+                </h2>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -470,12 +474,12 @@ export const ResumeBuilderPage = () => {
                 {resume.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center gap-2"
+                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center gap-2"
                   >
                     {skill}
                     <button
                       onClick={() => dispatch(removeSkill(skill))}
-                      className="text-blue-600 hover:text-blue-800"
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100"
                     >
                       ×
                     </button>
@@ -517,8 +521,8 @@ export const ResumeBuilderPage = () => {
         </main>
 
         {/* Правая панель */}
-        <aside className="w-96 bg-gray-50 border-l border-gray-200 p-6 overflow-y-auto">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <aside className="w-96 bg-gray-50 dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 p-6 overflow-y-auto">
+         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
             Предпросмотр
           </h3>
           <ResumePreview />
@@ -539,7 +543,7 @@ export const ResumeBuilderPage = () => {
           </div>
         }
       >
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Это действие нельзя отменить. Резюме будет удалено навсегда.
         </p>
       </Modal>

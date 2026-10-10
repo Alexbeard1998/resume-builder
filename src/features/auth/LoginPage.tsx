@@ -76,14 +76,14 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md w-96 border border-transparent dark:border-gray-800">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
           {isRegisterMode ? "Регистрация" : "Вход"}
         </h1>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-100 dark:bg-red-950 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
             {error}
             <button
               onClick={() => dispatch(clearError())}
@@ -150,7 +150,7 @@ export const LoginPage = () => {
             setIsRegisterMode(!isRegisterMode);
             dispatch(clearError());
           }}
-          className="mt-4 text-sm text-blue-500 hover:text-blue-700 w-full text-center"
+          className="mt-4 text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 w-full text-center"
         >
           {isRegisterMode
             ? "Уже есть аккаунт? Войти"
