@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { api } from '../../api/client';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { api } from "../../api/client";
 
 interface PublicResumeData {
   user: {
@@ -37,42 +37,49 @@ interface PublicResumeData {
 export const PublicResumePage = () => {
   const { username } = useParams<{ username: string }>();
   const [data, setData] = useState<PublicResumeData | null>(null);
-  const [status, setStatus] = useState<'loading' | 'succeeded' | 'failed'>('loading');
+  const [status, setStatus] = useState<"loading" | "succeeded" | "failed">(
+    "loading",
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadResume = async () => {
       if (!username) return;
-      
+
       try {
-        setStatus('loading');
+        setStatus("loading");
         const result = await api.getPublicResume(username);
         setData(result);
-        setStatus('succeeded');
+        setStatus("succeeded");
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Ошибка загрузки');
-        setStatus('failed');
+        setError(err instanceof Error ? err.message : "Ошибка загрузки");
+        setStatus("failed");
       }
     };
 
     loadResume();
   }, [username]);
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Загрузка резюме...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+        <p className="text-gray-500 dark:text-gray-400">Загрузка резюме...</p>
       </div>
     );
   }
 
-  if (status === 'failed') {
+  if (status === "failed") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Резюме не найдено</h1>
-          <p className="text-gray-500 mb-6">{error}</p>
-          <Link to="/" className="text-blue-500 hover:text-blue-700">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Резюме не найдено
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
+          <Link
+            to="/"
+            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             ← На главную
           </Link>
         </div>
@@ -86,15 +93,17 @@ export const PublicResumePage = () => {
   const { personalInfo, experience, education, skills } = resume;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-black py-12">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8 border border-transparent dark:border-gray-800">
         {/* Шапка */}
-        <div className="border-b border-gray-200 pb-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="border-b border-gray-200 dark:border-gray-800 pb-6 mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {personalInfo.fullName || user.name}
           </h1>
-          <p className="text-lg text-gray-600 mb-4">{resume.title}</p>
-          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            {resume.title}
+          </p>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
             {personalInfo.email && <span>✉️ {personalInfo.email}</span>}
             {personalInfo.phone && <span>📱 {personalInfo.phone}</span>}
             {personalInfo.location && <span>📍 {personalInfo.location}</span>}
@@ -104,23 +113,33 @@ export const PublicResumePage = () => {
         {/* О себе */}
         {personalInfo.summary && (
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">О себе</h2>
-            <p className="text-gray-700 leading-relaxed">{personalInfo.summary}</p>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+              О себе
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {personalInfo.summary}
+            </p>
           </section>
         )}
 
         {/* Опыт работы */}
         {experience.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Опыт работы</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Опыт работы
+            </h2>
             <div className="space-y-6">
               {experience.map((exp) => (
                 <div key={exp.id} className="border-l-2 border-blue-500 pl-4">
-                  <h3 className="font-medium text-gray-900">{exp.position}</h3>
-                  <p className="text-gray-600 text-sm mb-2">
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    {exp.position}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
                     {exp.company} • {exp.startDate} - {exp.endDate}
                   </p>
-                  <p className="text-gray-700">{exp.description}</p>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {exp.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -130,12 +149,16 @@ export const PublicResumePage = () => {
         {/* Образование */}
         {education.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Образование</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Образование
+            </h2>
             <div className="space-y-4">
               {education.map((edu) => (
                 <div key={edu.id}>
-                  <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    {edu.degree}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
                     {edu.institution} • {edu.year}
                   </p>
                 </div>
@@ -147,12 +170,14 @@ export const PublicResumePage = () => {
         {/* Навыки */}
         {skills.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Навыки</h2>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Навыки
+            </h2>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill) => (
                 <span
                   key={skill}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
                 >
                   {skill}
                 </span>
@@ -164,7 +189,7 @@ export const PublicResumePage = () => {
 
       {/* Футер */}
       <div className="text-center mt-6">
-        <Link to="/" className="text-gray-500 hover:text-gray-700 text-sm">
+        <Link to="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm">
           ← Создайте своё резюме
         </Link>
       </div>
