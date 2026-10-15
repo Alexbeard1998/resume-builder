@@ -19,7 +19,7 @@ export interface PublicResumeSummary {
 }
 
 export type SortOption = "newest" | "oldest" | "nameAsc" | "nameDesc";
-interface ExploreState {
+export interface ExploreState {
   resumes: PublicResumeSummary[];
   page: number;
   limit: number;

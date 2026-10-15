@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -10,50 +10,47 @@ import { ExploreSkeleton } from "../../components/ui/Skeleton";
 
 export const ExplorePage = () => {
   const dispatch = useAppDispatch();
-  const { resumes, status, error, totalPages, total, locations } =
-    useAppSelector((state) => state.explore);
+const { resumes, status, error, totalPages, total, locations } =
+  useAppSelector((state) => state.explore);
+
+// Защита от undefined (актуально для тестов и первого рендера)
+const safeResumes = resumes ?? [];
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchInput = searchParams.get("search") || "";
   const locationFilter = searchParams.get("location") || "";
   const sortFilter = (searchParams.get("sort") as SortOption) || "newest";
   const page = Number(searchParams.get("page")) || 1;
+
+const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+// 1. Загрузка локаций (один раз при монтировании)
+useEffect(() => {
+  dispatch(fetchLocations());
+}, [dispatch]);
 
-  // Загрузка локаций (один раз при монтировании)
-  useEffect(() => {
-    dispatch(fetchLocations());
-  }, [dispatch]);
+// 2. Debounce ТОЛЬКО для поиска (400мс)
+useEffect(() => {
+  const timer = window.setTimeout(() => {
+    setDebouncedSearch(searchInput);
+  }, 400);
 
-  // Debounce для поиска/фильтров (НЕ для page)
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      dispatch(
-        fetchPublicResumes({
-          search: searchInput,
-          location: locationFilter,
-          sort: sortFilter,
-          page,
-        }),
-      );
-    }, 400);
+  return () => window.clearTimeout(timer);
+}, [searchInput]);
 
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput, locationFilter, sortFilter, dispatch]);
+// 3. Один эффект на ВСЕ запросы (мгновенно)
+useEffect(() => {
+  dispatch(
+    fetchPublicResumes({
+      search: debouncedSearch,
+      location: locationFilter,
+      sort: sortFilter,
+      page,
+    }),
+  );
+}, [debouncedSearch, locationFilter, sortFilter, page, dispatch]);
 
-  // Мгновенный запрос при смене страницы
-  useEffect(() => {
-    dispatch(
-      fetchPublicResumes({
-        search: searchInput,
-        location: locationFilter,
-        sort: sortFilter,
-        page,
-      }),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+
   const handlePrevPage = () => {
     if (page > 1) {
       const params = new URLSearchParams(searchParams);
@@ -201,7 +198,7 @@ export const ExplorePage = () => {
           </div>
         </div>
 
-        {status === "loading" && resumes.length === 0 && <ExploreSkeleton />}
+        {status === "loading" && safeResumes.length === 0 && <ExploreSkeleton />}
 
         {status === "failed" && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -209,7 +206,7 @@ export const ExplorePage = () => {
           </div>
         )}
 
-        {status === "succeeded" && resumes.length === 0 && (
+        {status === "succeeded" && safeResumes.length === 0 && (
           <div className="text-center py-16">
             {searchInput ? (
               <>
@@ -242,11 +239,11 @@ export const ExplorePage = () => {
           </div>
         )}
 
-        {resumes.length > 0 && (
+        {safeResumes.length > 0 && (
           <>
             {/* Сетка карточек */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resumes.map((resume) => (
+              {safeResumes.map((resume) => (
                 <Link
                   key={resume.id}
                   to={`/view/${resume.user.username}`}

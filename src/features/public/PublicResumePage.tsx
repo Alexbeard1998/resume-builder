@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
 import { api } from "../../api/client";
 
 interface PublicResumeData {
@@ -42,6 +43,27 @@ export const PublicResumePage = () => {
   );
   const [error, setError] = useState<string | null>(null);
 
+  const resumeRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: resumeRef,
+    documentTitle: data
+      ? `${data.resume.personalInfo.fullName || data.user.name} - резюме`
+      : "resume",
+    pageStyle: `
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+    }
+  `,
+  });
+  
   useEffect(() => {
     const loadResume = async () => {
       if (!username) return;
@@ -94,7 +116,19 @@ export const PublicResumePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black py-12">
-      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8 border border-transparent dark:border-gray-800">
+      {/* Кнопка печати */}
+      <div className="max-w-3xl mx-auto mb-4 flex justify-end">
+        <button
+          onClick={handlePrint}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          📄 Скачать PDF
+        </button>
+      </div>
+      <div
+        ref={resumeRef}
+        className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8 border border-transparent dark:border-gray-800"
+      >
         {/* Шапка */}
         <div className="border-b border-gray-200 dark:border-gray-800 pb-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -189,7 +223,10 @@ export const PublicResumePage = () => {
 
       {/* Футер */}
       <div className="text-center mt-6">
-        <Link to="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm">
+        <Link
+          to="/"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm"
+        >
           ← Создайте своё резюме
         </Link>
       </div>
