@@ -165,6 +165,7 @@ useEffect(() => {
                 params.delete("page");
                 setSearchParams(params, { replace: true });
               }}
+              aria-label="Фильтр по локации"
               className="px-4 py-2 border rounded-lg dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             >
               <option value="">Все локации</option>
@@ -188,6 +189,7 @@ useEffect(() => {
                 params.delete("page");
                 setSearchParams(params, { replace: true });
               }}
+                aria-label="Сортировка"
               className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-white"
             >
               <option value="newest">Сначала новые</option>

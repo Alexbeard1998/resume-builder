@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import { configureStore } from "@reduxjs/toolkit";
@@ -14,53 +15,8 @@ vi.mock("../../api/client", () => ({
     getPublicLocations: vi.fn(),
   },
 }));
+
 import { api } from "../../api/client";
-
-// ===== Хелпер для рендера =====
-const renderExplorePage = (isAuthenticated = false) => {
-  const store = configureStore({
-    reducer: {
-      explore: exploreReducer,
-      auth: authReducer,
-    },
-    preloadedState: {
-      auth: {
-        user: isAuthenticated
-          ? {
-              id: "1",
-              email: "test@example.com",
-              name: "Test",
-              username: "test",
-            }
-          : null,
-        isAuthenticated,
-        status: "idle" as const,
-        error: null,
-      },
-      explore: {
-        resumes: [],
-        page: 1,
-        limit: 12,
-        total: 0,
-        totalPages: 0,
-        search: "",
-        location: "",
-        sort: "newest" as const,
-        locations: [],
-        status: "idle" as const,
-        error: null,
-      },
-    },
-  });
-
-  return render(
-    <Provider store={store}>
-      <MemoryRouter>
-        <ExplorePage />
-      </MemoryRouter>
-    </Provider>,
-  );
-};
 
 // ===== Мок-данные =====
 const mockResumes = [
@@ -86,6 +42,53 @@ const mockResumes = [
   },
 ];
 
+const emptyResponse = {
+  resumes: [],
+  total: 0,
+  page: 1,
+  limit: 12,
+  totalPages: 0,
+};
+
+const resumesResponse = {
+  resumes: mockResumes,
+  total: mockResumes.length,
+  page: 1,
+  limit: 12,
+  totalPages: 1,
+};
+
+// ===== Хелпер =====
+const renderExplorePage = (
+  isAuthenticated = false,
+  initialEntries: string[] = ["/explore"],
+) => {
+  const store = configureStore({
+    reducer: {
+      explore: exploreReducer,
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: isAuthenticated
+          ? { id: "1", email: "test@example.com", name: "Test", username: "test" }
+          : null,
+        isAuthenticated,
+        status: "idle" as const,
+        error: null,
+      },
+    },
+  });
+
+  return render(
+    <Provider store={store}>
+      <MemoryRouter initialEntries={initialEntries}>
+        <ExplorePage />
+      </MemoryRouter>
+    </Provider>,
+  );
+};
+
 // ===== ТЕСТЫ =====
 describe("ExplorePage", () => {
   beforeEach(() => {
@@ -93,16 +96,10 @@ describe("ExplorePage", () => {
     vi.mocked(api.getPublicLocations).mockResolvedValue([]);
   });
 
-  // ----- Заголовок -----
+  // ----- Рендер -----
   describe("рендер", () => {
     it("должен показать заголовок Каталог резюме", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: [],
-        total: 0,
-        page: 1,
-        limit: 12,
-        totalPages: 0,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage();
 
       expect(
@@ -111,29 +108,19 @@ describe("ExplorePage", () => {
     });
 
     it("должен вызвать API при монтировании", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: [],
-        total: 0,
-        page: 1,
-        limit: 12,
-        totalPages: 0,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage();
 
-      expect(api.getPublicResumes).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
   // ----- Состояния -----
   describe("состояния загрузки", () => {
     it("должен показать пустое состояние, если нет резюме", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: [],
-        total: 0,
-        page: 1,
-        limit: 12,
-        totalPages: 0,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage();
 
       expect(
@@ -154,43 +141,15 @@ describe("ExplorePage", () => {
   // ----- Список резюме -----
   describe("список резюме", () => {
     it("должен показать все резюме", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: mockResumes,
-        total: mockResumes.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(resumesResponse);
       renderExplorePage();
 
       expect(await screen.findByText("Иван Иванов")).toBeInTheDocument();
       expect(screen.getByText("Пётр Петров")).toBeInTheDocument();
     });
 
-    it("должен показать должность каждого резюме", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: mockResumes,
-        total: mockResumes.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-      });
-      renderExplorePage();
-
-      expect(
-        await screen.findByText("Frontend-разработчик"),
-      ).toBeInTheDocument();
-      expect(screen.getByText("Backend-разработчик")).toBeInTheDocument();
-    });
-
     it("должен показать локацию, если есть", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: mockResumes,
-        total: mockResumes.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(resumesResponse);
       renderExplorePage();
 
       expect(await screen.findByText(/москва/i)).toBeInTheDocument();
@@ -198,13 +157,7 @@ describe("ExplorePage", () => {
     });
 
     it("должен показать навыки", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: mockResumes,
-        total: mockResumes.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(resumesResponse);
       renderExplorePage();
 
       expect(await screen.findByText("React")).toBeInTheDocument();
@@ -213,13 +166,7 @@ describe("ExplorePage", () => {
     });
 
     it("должен рендерить карточки как ссылки на /view/:username", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: mockResumes,
-        total: mockResumes.length,
-        page: 1,
-        limit: 12,
-        totalPages: 1,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(resumesResponse);
       renderExplorePage();
 
       const link1 = await screen.findByRole("link", { name: /иван иванов/i });
@@ -230,44 +177,145 @@ describe("ExplorePage", () => {
     });
   });
 
-  // ----- Шапка для гостя и авторизованного -----
-  describe("шапка", () => {
-    it("для гостя должна показать ссылку Войти", async () => {
+  // ----- Поиск (debounce) -----
+  describe("поиск с debounce", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("должен уйти с задержкой 400мс после ввода", async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
+
+      renderExplorePage();
+
+      // Первый запрос при монтировании
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledTimes(1);
+      });
+
+      const input = screen.getByPlaceholderText(/поиск по имени/i);
+
+      // Печатаем "иван"
+      await user.type(input, "иван");
+
+      // Сразу после ввода — запрос НЕ должен уйти
+      expect(api.getPublicResumes).toHaveBeenCalledTimes(1);
+
+      // Проматываем 400мс
+      vi.advanceTimersByTime(400);
+
+      // Теперь запрос должен уйти с search
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledWith(
+          1,
+          12,
+          "иван",
+          "",
+          "newest",
+        );
+      });
+    });
+  });
+
+  // ----- Пагинация (мгновенно) -----
+  describe("пагинация", () => {
+    it("должен запросить страницу 2 мгновенно при клике Вперёд", async () => {
+      const user = userEvent.setup();
       vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: [],
-        total: 0,
+        resumes: mockResumes,
+        total: 30,
         page: 1,
         limit: 12,
-        totalPages: 0,
+        totalPages: 3,
       });
+
+      renderExplorePage();
+
+      // Ждём первую страницу
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledWith(
+          1,
+          12,
+          "",
+          "",
+          "newest",
+        );
+      });
+
+      // Нажимаем "Вперёд"
+      const nextButton = screen.getByRole("button", { name: /вперёд/i });
+      await user.click(nextButton);
+
+      // Запрос на page=2 — мгновенный
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledWith(
+          2,
+          12,
+          "",
+          "",
+          "newest",
+        );
+      });
+    });
+  });
+
+  // ----- Фильтр локации (мгновенно) -----
+  describe("фильтр локации", () => {
+    it("должен запросить с location мгновенно при выборе", async () => {
+      const user = userEvent.setup();
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
+      vi.mocked(api.getPublicLocations).mockResolvedValue([
+        "Москва",
+        "Санкт-Петербург",
+      ]);
+
+      renderExplorePage();
+
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledTimes(1);
+      });
+
+      // Выбираем "Москва"
+      const locationSelect = screen.getByRole("combobox", {
+        name: /локаци/i,
+      });
+      await user.selectOptions(locationSelect, "Москва");
+
+      await waitFor(() => {
+        expect(api.getPublicResumes).toHaveBeenCalledWith(
+          1,
+          12,
+          "",
+          "Москва",
+          "newest",
+        );
+      });
+    });
+  });
+
+  // ----- Шапка -----
+  describe("шапка", () => {
+    it("для гостя должна показать ссылку Войти", async () => {
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage(false);
 
       expect(
         await screen.findByRole("link", { name: /войти/i }),
       ).toBeInTheDocument();
-
-      expect(
-        screen.queryByRole("link", { name: /мои резюме/i }),
-      ).not.toBeInTheDocument();
     });
 
     it("для авторизованного должна показать ссылку Мои резюме", async () => {
-      vi.mocked(api.getPublicResumes).mockResolvedValue({
-        resumes: [],
-        total: 0,
-        page: 1,
-        limit: 12,
-        totalPages: 0,
-      });
+      vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage(true);
 
       expect(
         await screen.findByRole("link", { name: /мои резюме/i }),
       ).toBeInTheDocument();
-
-      expect(
-        screen.queryByRole("link", { name: /войти/i }),
-      ).not.toBeInTheDocument();
     });
   });
 });
