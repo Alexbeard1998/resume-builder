@@ -2,7 +2,7 @@ import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 // Базовые стили для инпутов
-const baseInputStyles = 'input-base transition-shadow';
+const baseInputStyles = "input-base transition-shadow";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -17,8 +17,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className="space-y-1">
         {label && (
           <label
-            className="block text-sm font-medium text-gray-700"
             htmlFor={inputId}
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             {label}
           </label>
@@ -51,8 +51,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className="space-y-1">
         {label && (
           <label
-            className="block text-sm font-medium text-gray-700"
             htmlFor={textareaId}
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             {label}
           </label>

@@ -133,6 +133,67 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// OAuth — вход через Google/GitHub
+app.post('/api/auth/oauth', async (req, res) => {
+  try {
+    const { email, name, provider } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email обязателен' });
+    }
+
+    // Ищем существующего пользователя
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    // Если нет — создаём
+    if (!user) {
+      // Генерируем username из email
+      const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+      let username = baseUsername;
+      let counter = 1;
+
+      while (await prisma.user.findUnique({ where: { username } })) {
+        username = `${baseUsername}${counter}`;
+        counter++;
+      }
+
+      // Генерируем случайный пароль (не используется для входа)
+      const randomPassword = require('crypto').randomBytes(32).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          username,
+          password: hashedPassword,
+        },
+      });
+
+      console.log(`✅ Создан OAuth-пользователь: ${email} (${provider})`);
+    }
+
+    // Генерируем JWT (как при обычном входе)
+    const { accessToken, refreshToken } = generateTokens(user);
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+      },
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 // Обновление токена
 app.post("/api/auth/refresh", async (req, res) => {
   try {

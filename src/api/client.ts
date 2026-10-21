@@ -101,6 +101,19 @@ export const api = {
     });
     return handleResponse(res);
   },
+  
+  async oauthLogin(data: {
+    email: string;
+    name: string;
+    provider: "google" | "github";
+  }) {
+    const res = await fetch(`${API_URL}/auth/oauth`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+  },
 
   async login(email: string, password: string) {
     const res = await fetch(`${API_URL}/auth/login`, {
@@ -187,10 +200,9 @@ export const api = {
     }
 
     try {
-      const res = await fetch(`${API_URL}/public/resumes?${params}`, 
-        {
-        signal: controller.signal,}
-      );
+      const res = await fetch(`${API_URL}/public/resumes?${params}`, {
+        signal: controller.signal,
+      });
       return handleResponse(res);
     } finally {
       if (resumesAbortController === controller) {

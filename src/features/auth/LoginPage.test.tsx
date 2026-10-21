@@ -71,7 +71,7 @@ describe("LoginPage", () => {
       renderLoginPage();
 
       expect(
-        screen.getByRole("button", { name: /войти/i })
+        screen.getByRole("button", { name: "Войти"  })
       ).toBeInTheDocument();
     });
 
@@ -124,7 +124,7 @@ describe("LoginPage", () => {
 
       await user.type(screen.getByLabelText(/email/i), "invalid-email");
       await user.type(screen.getByLabelText(/пароль/i), "123456");
-      await user.click(screen.getByRole("button", { name: /войти/i }));
+      await user.click(screen.getByRole("button", { name: "Войти"  }));
 
       expect(mockShowToast).toHaveBeenCalledWith(
         expect.stringMatching(/email/i),
@@ -138,7 +138,7 @@ describe("LoginPage", () => {
 
       await user.type(screen.getByLabelText(/email/i), "test@example.com");
       await user.type(screen.getByLabelText(/пароль/i), "123");
-      await user.click(screen.getByRole("button", { name: /войти/i }));
+      await user.click(screen.getByRole("button", { name: "Войти"  }));
 
       expect(mockShowToast).toHaveBeenCalledWith(
         expect.stringMatching(/пароль/i),
@@ -152,7 +152,7 @@ describe("LoginPage", () => {
 
       await user.type(screen.getByLabelText(/email/i), "invalid");
       await user.type(screen.getByLabelText(/пароль/i), "123");
-      await user.click(screen.getByRole("button", { name: /войти/i }));
+      await user.click(screen.getByRole("button", { name: "Войти"  }));
 
       expect(api.login).not.toHaveBeenCalled();
     });
@@ -172,7 +172,7 @@ describe("LoginPage", () => {
 
       await user.type(screen.getByLabelText(/email/i), "test@example.com");
       await user.type(screen.getByLabelText(/пароль/i), "123456");
-      await user.click(screen.getByRole("button", { name: /войти/i }));
+      await user.click(screen.getByRole("button", { name: "Войти"  }));
 
       await waitFor(() => {
         expect(api.login).toHaveBeenCalledWith("test@example.com", "123456");
@@ -190,7 +190,7 @@ describe("LoginPage", () => {
 
       await user.type(screen.getByLabelText(/email/i), "test@example.com");
       await user.type(screen.getByLabelText(/пароль/i), "wrongpass");
-      await user.click(screen.getByRole("button", { name: /войти/i }));
+      await user.click(screen.getByRole("button", { name: "Войти"  }));
 
       await waitFor(() => {
         expect(mockShowToast).toHaveBeenCalledWith(

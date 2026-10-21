@@ -6,12 +6,14 @@ import { ExplorePage } from "../features/explore/ExplorePage";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { RootLayout } from "../components/RootLayout";
 import { HomePage } from "../components/HomePage";
+import { AuthCallbackPage } from "../features/auth/AuthCallbackPage";
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
       { path: "/login", element: <LoginPage /> },
+      { path: "/auth/callback", element: <AuthCallbackPage /> },
       { path: "/explore", element: <ExplorePage /> },
       { path: "/view/:username", element: <PublicResumePage /> },
       {
