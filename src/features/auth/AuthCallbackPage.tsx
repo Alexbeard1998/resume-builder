@@ -10,47 +10,45 @@ export const AuthCallbackPage = () => {
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        // Получаем сессию из Supabase после redirect
-        const { data, error } = await supabase.auth.getSession();
+useEffect(() => {
+  const handleCallback = async () => {
+    try {
+      // PKCE flow: обмениваем code из URL на сессию
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.exchangeCodeForSession(window.location.href);
 
-        if (error) throw error;
-        if (!data.session) throw new Error("Сессия не найдена");
+      if (sessionError) throw sessionError;
 
-        const email = data.session.user.email;
-        const name =
-          data.session.user.user_metadata?.full_name ||
-          data.session.user.email?.split("@")[0] ||
-          "User";
+      // Если сессия уже есть — берём её
+      const { data } = await supabase.auth.getSession();
+      const session = sessionData.session || data.session;
 
-        if (!email) throw new Error("Email не найден");
+      if (!session) throw new Error("Сессия не найдена");
 
-        // Отправляем на бэкенд — создаст или найдёт пользователя
-        const response = await api.oauthLogin({
-          email,
-          name,
-          provider: "google",
-        });
+      const email = session.user.email;
+      const name =
+        session.user.user_metadata?.full_name ||
+        session.user.email?.split("@")[0] ||
+        "User";
 
-        // Сохраняем токены
-        localStorage.setItem("accessToken", response.accessToken);
-        localStorage.setItem("refreshToken", response.refreshToken);
-        localStorage.setItem("user", JSON.stringify(response.user));
+      if (!email) throw new Error("Email не найден");
 
-        // Устанавливаем пользователя в Redux
-        dispatch(setUser(response.user));
+      // Отправляем на бэкенд
+      const response = await api.oauthLogin({ email, name, provider: "google" });
 
-        // Редирект на главную
-        navigate("/", { replace: true });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка авторизации");
-      }
-    };
+      localStorage.setItem("accessToken", response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.user));
 
-    handleCallback();
-  }, [dispatch, navigate]);
+      dispatch(setUser(response.user));
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка авторизации");
+    }
+  };
+
+  handleCallback();
+}, [dispatch, navigate]);
 
   if (error) {
     return (
