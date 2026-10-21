@@ -20,17 +20,19 @@ export const LoginPage = () => {
   const { showToast } = useToast();
 
   const handleGoogleLogin = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
+    localStorage.removeItem("sb-zyxwmmvfifyaavseqvjx-auth-token-code-verifier");
 
-  if (error) {
-    showToast(error.message, "error");
-  }
-};
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      showToast(error.message, "error");
+    }
+  };
 
   const { status, error, isAuthenticated } = useAppSelector(
     (state) => state.auth,
