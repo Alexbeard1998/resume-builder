@@ -13,10 +13,13 @@ export const AuthCallbackPage = () => {
 useEffect(() => {
   const handleCallback = async () => {
     try {
-      // PKCE flow: обмениваем code из URL на сессию
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.exchangeCodeForSession(window.location.href);
+const urlParams = new URLSearchParams(window.location.search);
+const code = urlParams.get("code");
 
+if (!code) throw new Error("Код авторизации не найден в URL");
+
+const { data: sessionData, error: sessionError } =
+  await supabase.auth.exchangeCodeForSession(code);
       if (sessionError) throw sessionError;
 
       // Если сессия уже есть — берём её
