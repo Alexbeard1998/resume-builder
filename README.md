@@ -1,9 +1,10 @@
+![Render](https://img.shields.io/badge/Render-Live-brightgreen?logo=render&style=for-the-badge)
+
 # Resume Builder
 
 Full-stack приложение для создания, редактирования и публикации резюме.
 
 🌐 Live Demo: https://resume-builder-alexbeard.vercel.app/
-
 ## Стек
 
 ### Frontend
