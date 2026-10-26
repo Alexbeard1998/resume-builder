@@ -547,6 +547,45 @@ app.delete("/api/resumes/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// Отправка приглашения на собеседование
+app.post('/api/invitations', async (req, res) => {
+  try {
+    const { resumeId, hrName, hrEmail, message } = req.body;
+
+    if (!resumeId || !hrName || !hrEmail || !message) {
+      return res.status(400).json({ error: 'Все поля обязательны' });
+    }
+
+    // Находим резюме, чтобы убедиться, что оно существует
+    const resume = await prisma.resume.findUnique({
+      where: { id: resumeId },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: 'Резюме не найдено' });
+    }
+
+    // Сохраняем приглашение в базу
+    const invitation = await prisma.invitation.create({
+      data: {
+        hrName,
+        hrEmail,
+        message,
+        resumeId,
+      },
+    });
+
+    console.log(`📩 Новое приглашение для резюме ${resumeId} от ${hrEmail}`);
+
+    // TODO: Здесь позже будет отправка email
+
+    res.json({ success: true, invitation });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

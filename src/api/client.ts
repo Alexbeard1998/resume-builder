@@ -101,7 +101,7 @@ export const api = {
     });
     return handleResponse(res);
   },
-  
+
   async oauthLogin(data: {
     email: string;
     name: string;
@@ -217,6 +217,20 @@ export const api = {
 
   async getPublicResume(username: string) {
     const res = await fetch(`${API_URL}/public/resume/${username}`);
+    return handleResponse(res);
+  },
+  
+  async sendInvitation(data: {
+    resumeId: string;
+    hrName: string;
+    hrEmail: string;
+    message: string;
+  }) {
+    const res = await fetch(`${API_URL}/invitations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
     return handleResponse(res);
   },
 };

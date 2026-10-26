@@ -2,6 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import { api } from "../../api/client";
+import { useToast } from "../../components/ui/ToastContext";
+import { Modal } from "../../components/ui/Modal";
+import { Input, Textarea } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
 
 interface PublicResumeData {
   user: {
@@ -9,6 +13,7 @@ interface PublicResumeData {
     username: string;
   };
   resume: {
+    id: string;
     title: string;
     personalInfo: {
       fullName: string;
@@ -63,7 +68,43 @@ export const PublicResumePage = () => {
     }
   `,
   });
-  
+
+  const { showToast } = useToast();
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    hrName: "",
+    hrEmail: "",
+    message: "",
+  });
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSendInvite = async () => {
+    if (!inviteForm.hrName || !inviteForm.hrEmail || !inviteForm.message) {
+      showToast("Заполните все поля", "error");
+      return;
+    }
+
+    if (!data) return;
+
+    setIsSending(true);
+    try {
+      await api.sendInvitation({
+        resumeId: data.resume.id,
+        hrName: inviteForm.hrName,
+        hrEmail: inviteForm.hrEmail,
+        message: inviteForm.message,
+      });
+      showToast("Приглашение отправлено!", "success");
+      setIsInviteModalOpen(false);
+      setInviteForm({ hrName: "", hrEmail: "", message: "" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ошибка отправки";
+      showToast(message, "error");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   useEffect(() => {
     const loadResume = async () => {
       if (!username) return;
@@ -142,6 +183,12 @@ export const PublicResumePage = () => {
             {personalInfo.phone && <span>📱 {personalInfo.phone}</span>}
             {personalInfo.location && <span>📍 {personalInfo.location}</span>}
           </div>
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            📩 Пригласить на собеседование
+          </button>
         </div>
 
         {/* О себе */}
@@ -230,6 +277,51 @@ export const PublicResumePage = () => {
           ← Создайте своё резюме
         </Link>
       </div>
+
+      <Modal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        title="Пригласить на собеседование"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setIsInviteModalOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleSendInvite} isLoading={isSending}>
+              Отправить
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <Input
+            label="Ваше имя"
+            value={inviteForm.hrName}
+            onChange={(e) =>
+              setInviteForm({ ...inviteForm, hrName: e.target.value })
+            }
+            placeholder="Иван HR"
+          />
+          <Input
+            label="Ваш Email"
+            type="email"
+            value={inviteForm.hrEmail}
+            onChange={(e) =>
+              setInviteForm({ ...inviteForm, hrEmail: e.target.value })
+            }
+            placeholder="hr@company.com"
+          />
+          <Textarea
+            label="Сообщение"
+            value={inviteForm.message}
+            onChange={(e) =>
+              setInviteForm({ ...inviteForm, message: e.target.value })
+            }
+            rows={4}
+            placeholder="Здравствуйте! Мы хотим пригласить вас..."
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

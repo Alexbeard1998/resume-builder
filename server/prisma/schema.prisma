@@ -33,4 +33,15 @@ model Resume {
   user         User     @relation(fields: [userId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  invitations  Invitation[]
+}
+
+model Invitation {
+  id         String   @id @default(cuid())
+  message    String
+  hrName     String
+  hrEmail    String
+  resumeId   String
+  resume     Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 }
