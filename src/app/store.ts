@@ -3,6 +3,7 @@ import authReducer from "../features/auth/authSlice";
 import resumeReducer from "../features/resume/resumeSlice";
 import dashboardReducer from "../features/dashboard/dashboardSlice";
 import exploreReducer from "../features/explore/exploreSlice";
+import invitationsReducer from "../features/invitations/invitationsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     resume: resumeReducer,
     dashboard: dashboardReducer,
     explore: exploreReducer,
+    invitations: invitationsReducer,
   },
 });
 

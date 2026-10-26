@@ -9,14 +9,27 @@ import { DashboardSkeleton } from "../../components/ui/Skeleton";
 import { deleteResume } from "../resume/resumeSlice";
 import { Modal } from "../../components/ui/Modal";
 import { withToast } from "../../utils/withToast";
+import { fetchInvitations } from "../invitations/invitationsSlice";
 
 export const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { resumes, status, error } = useAppSelector((state) => state.dashboard);
+  const [activeTab, setActiveTab] = useState<"resumes" | "invitations">(
+    "resumes",
+  );
+  const { invitations, status: invStatus } = useAppSelector(
+    (state) => state.invitations,
+  );
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchInvitations());
+    }
+  }, [user?.id, dispatch]);
 
   useEffect(() => {
     if (user?.id) {
@@ -82,6 +95,33 @@ export const DashboardPage = () => {
 
       {/* Контент */}
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-800">
+          <button
+            onClick={() => setActiveTab("resumes")}
+            className={`pb-2 px-1 ${
+              activeTab === "resumes"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+            }`}
+          >
+            Мои резюме
+          </button>
+          <button
+            onClick={() => setActiveTab("invitations")}
+            className={`pb-2 px-1 ${
+              activeTab === "invitations"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+            }`}
+          >
+            Приглашения
+            {invitations.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                {invitations.length}
+              </span>
+            )}
+          </button>
+        </div>
         {status === "loading" && <DashboardSkeleton />}
 
         {status === "failed" && (
@@ -101,7 +141,7 @@ export const DashboardPage = () => {
           </div>
         )}
 
-        {status === "succeeded" && resumes.length > 0 && (
+        {activeTab === "resumes" && status === "succeeded" && resumes.length > 0 && (
           <>
             {/* Статистика */}
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -168,7 +208,7 @@ export const DashboardPage = () => {
                   </div>
 
                   {/* Дата */}
-                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     Обновлено: {new Date(resume.updatedAt).toLocaleDateString()}
                   </p>
 
@@ -203,8 +243,50 @@ export const DashboardPage = () => {
                 </div>
               ))}
             </div>
+
           </>
         )}
+                    {activeTab === "invitations" && (
+              <div>
+                {invStatus === "loading" && (
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Загрузка приглашений...
+                  </p>
+                )}
+                {invStatus === "succeeded" && invitations.length === 0 && (
+                  <p className="text-gray-500 dark:text-gray-400 text-center py-16">
+                    Пока нет приглашений
+                  </p>
+                )}
+                {invitations.length > 0 && (
+                  <div className="space-y-4">
+                    {invitations.map((inv) => (
+                      <div key={inv.id} className="card">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-semibold text-gray-800 dark:text-white">
+                              {inv.hrName}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {inv.hrEmail}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {new Date(inv.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                          <strong>Резюме:</strong> {inv.resume.title}
+                        </p>
+                        <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                          {inv.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
       </main>
 
       {/* Модалка удаления */}

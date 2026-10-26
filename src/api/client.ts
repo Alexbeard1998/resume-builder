@@ -219,7 +219,7 @@ export const api = {
     const res = await fetch(`${API_URL}/public/resume/${username}`);
     return handleResponse(res);
   },
-  
+
   async sendInvitation(data: {
     resumeId: string;
     hrName: string;
@@ -233,4 +233,9 @@ export const api = {
     });
     return handleResponse(res);
   },
+
+  async getInvitations() {
+  const res = await fetchWithAuth(`${API_URL}/invitations`);
+  return handleResponse(res);
+},
 };

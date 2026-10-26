@@ -586,6 +586,35 @@ app.post('/api/invitations', async (req, res) => {
   }
 });
 
+// Получение всех приглашений для текущего пользователя
+app.get('/api/invitations', authMiddleware, async (req, res) => {
+  try {
+    // Находим все резюме пользователя
+    const resumes = await prisma.resume.findMany({
+      where: { userId: req.userId },
+      select: { id: true },
+    });
+
+    const resumeIds = resumes.map((r) => r.id);
+
+    // Находим все приглашения для этих резюме
+    const invitations = await prisma.invitation.findMany({
+      where: { resumeId: { in: resumeIds } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        resume: {
+          select: { title: true },
+        },
+      },
+    });
+
+    res.json(invitations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
