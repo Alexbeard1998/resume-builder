@@ -1,3 +1,5 @@
+![Render](https://img.shields.io/badge/Render-Live-brightgreen?logo=render&style=for-the-badge)
+
 # Resume Builder
 
 Full-stack приложение для создания, редактирования и публикации резюме.
@@ -12,6 +14,7 @@ Full-stack приложение для создания, редактирова�
 - Redux Toolkit
 - React Router
 - Tailwind CSS
+- Supabase Auth (OAuth)
 
 ### Backend
 - Node.js + Express
@@ -21,28 +24,30 @@ Full-stack приложение для создания, редактирова�
 
 ### Инфраструктура
 - Vercel (frontend)
-- Railway (backend)
+- Render (backend)
 - Supabase (database)
 
 ## Возможности
 
 - 🔐 Авторизация (JWT + refresh tokens)
+- 🔑 Вход через Google (OAuth через Supabase)
 - 📝 CRUD резюме (личные данные, опыт, образование, навыки)
 - 🎨 Живой предпросмотр
+- 🌓 Тёмная и светлая тема (с сохранением в localStorage)
 - 🔄 Drag & Drop для сортировки опыта
 - 💾 Автосохранение (debounce)
 - 📢 Три статуса: черновик / по ссылке / в каталоге
 - 🌐 Публичная страница резюме (/view/:username)
-- 🔍 Каталог публичных резюме
+- 🔍 Каталог публичных резюме (с поиском, фильтрами и пагинацией)
+- 📄 Экспорт резюме в PDF (через системную печать)
 - 🔒 Хеширование паролей (bcrypt)
-- ✅ Покрытие тестами (Vitest + RTL)
+- ✅ Покрытие тестами (Vitest + RTL) — 91 тест
 
 ## Скриншоты
 
 ![Дашборд](./screenshots/dashboard.png)
 ![Редактор](./screenshots/builder.png)
 ![Каталог](./screenshots/explore.png)
-
 
 ## Локальный запуск
 
@@ -73,6 +78,8 @@ npm install
 
 ```text
 VITE_API_URL=http://localhost:3001/api
+VITE_SUPABASE_URL=https://zyxwmmvfifyaavseqvjx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5eHdtbXZmaWZ5YWF2c2Vxdmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNTYxNzUsImV4cCI6MjEwNTczMjE3NX0.q5ZBuLcmt6QsXtya6eqOKb84i6yb2UWDGMXuY1Qt50A
 ```
 
 Сервер (server/.env):
@@ -103,8 +110,8 @@ Frontend (терминал 2):
 
 ```bash
 npm run dev
-Открыть http://localhost:5173
 ```
+Открыть http://localhost:5173
 
 ### Тесты
 
@@ -123,7 +130,7 @@ resume-builder/
 │   └── utils/               # Хелперы
 └── server/                  # Backend
     ├── prisma/              # Схема БД
-    └── index.js             # Express-сер
+    └── index.js             # Express-сервер
 ```
 
 ### Лицензия
