@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useToast } from "../../components/ui/ToastContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAppDispatch } from "../../app/hooks";
@@ -7,51 +8,57 @@ import { api } from "../../api/client";
 
 export const AuthCallbackPage = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-  const handleCallback = async () => {
-    try {
-const urlParams = new URLSearchParams(window.location.search);
-const code = urlParams.get("code");
+  useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
 
-if (!code) throw new Error("Код авторизации не найден в URL");
+        if (!code) throw new Error("Код авторизации не найден в URL");
 
-const { data: sessionData, error: sessionError } =
-  await supabase.auth.exchangeCodeForSession(code);
-      if (sessionError) throw sessionError;
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.exchangeCodeForSession(code);
+        if (sessionError) throw sessionError;
 
-      // Если сессия уже есть — берём её
-      const { data } = await supabase.auth.getSession();
-      const session = sessionData.session || data.session;
+        // Если сессия уже есть — берём её
+        const { data } = await supabase.auth.getSession();
+        const session = sessionData.session || data.session;
 
-      if (!session) throw new Error("Сессия не найдена");
+        if (!session) throw new Error("Сессия не найдена");
 
-      const email = session.user.email;
-      const name =
-        session.user.user_metadata?.full_name ||
-        session.user.email?.split("@")[0] ||
-        "User";
+        const email = session.user.email;
+        const name =
+          session.user.user_metadata?.full_name ||
+          session.user.email?.split("@")[0] ||
+          "User";
 
-      if (!email) throw new Error("Email не найден");
+        if (!email) throw new Error("Email не найден");
 
-      // Отправляем на бэкенд
-      const response = await api.oauthLogin({ email, name, provider: "google" });
+        // Отправляем на бэкенд
+        const response = await api.oauthLogin({
+          email,
+          name,
+          provider: "google",
+        });
 
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-      localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+        localStorage.setItem("user", JSON.stringify(response.user));
 
-      dispatch(setUser(response.user));
-      navigate("/", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка авторизации");
-    }
-  };
+        dispatch(setUser(response.user));
+        showToast("Добро пожаловать!", "success");
+        navigate("/", { replace: true });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Ошибка авторизации");
+      }
+    };
 
-  handleCallback();
-}, [dispatch, navigate]);
+    handleCallback();
+  }, [dispatch, navigate, showToast]);
 
   if (error) {
     return (

@@ -1,14 +1,16 @@
 require("dotenv").config();
-
+const { Resend } = require("resend");
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const app = express();
 const prisma = new PrismaClient();
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
@@ -134,12 +136,12 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 // OAuth — вход через Google/GitHub
-app.post('/api/auth/oauth', async (req, res) => {
+app.post("/api/auth/oauth", async (req, res) => {
   try {
     const { email, name, provider } = req.body;
 
     if (!email) {
-      return res.status(400).json({ error: 'Email обязателен' });
+      return res.status(400).json({ error: "Email обязателен" });
     }
 
     // Ищем существующего пользователя
@@ -150,7 +152,7 @@ app.post('/api/auth/oauth', async (req, res) => {
     // Если нет — создаём
     if (!user) {
       // Генерируем username из email
-      const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+      const baseUsername = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
       let username = baseUsername;
       let counter = 1;
 
@@ -160,7 +162,7 @@ app.post('/api/auth/oauth', async (req, res) => {
       }
 
       // Генерируем случайный пароль (не используется для входа)
-      const randomPassword = require('crypto').randomBytes(32).toString('hex');
+      const randomPassword = require("crypto").randomBytes(32).toString("hex");
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
       user = await prisma.user.create({
@@ -190,7 +192,7 @@ app.post('/api/auth/oauth', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
@@ -248,15 +250,15 @@ app.get("/api/public/locations", async (req, res) => {
 // Маппинг сортировки
 function getOrderBy(sort) {
   switch (sort) {
-    case 'oldest':
-      return { updatedAt: 'asc' };
-    case 'nameAsc':
-      return { fullName: 'asc' };
-    case 'nameDesc':
-      return { fullName: 'desc' };
-    case 'newest':
+    case "oldest":
+      return { updatedAt: "asc" };
+    case "nameAsc":
+      return { fullName: "asc" };
+    case "nameDesc":
+      return { fullName: "desc" };
+    case "newest":
     default:
-      return { updatedAt: 'desc' };
+      return { updatedAt: "desc" };
   }
 }
 
@@ -267,8 +269,8 @@ app.get("/api/public/resumes", async (req, res) => {
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 12));
     const skip = (page - 1) * limit;
     const search = (req.query.search || "").trim();
-    const location = (req.query.location || '').trim();
-    const sort = req.query.sort || 'newest';
+    const location = (req.query.location || "").trim();
+    const sort = req.query.sort || "newest";
 
     // Базовый фильтр: только public
     const where = { status: "public" };
@@ -296,7 +298,7 @@ app.get("/api/public/resumes", async (req, res) => {
     const [resumes, total] = await Promise.all([
       prisma.resume.findMany({
         where,
-        orderBy: getOrderBy(sort), 
+        orderBy: getOrderBy(sort),
         skip,
         take: limit,
         include: {
@@ -444,7 +446,8 @@ app.get("/api/resumes/:id", authMiddleware, async (req, res) => {
 // Создание резюме
 app.post("/api/resumes", authMiddleware, async (req, res) => {
   try {
-    const { title, personalInfo, experience, education, skills, status } = req.body;
+    const { title, personalInfo, experience, education, skills, status } =
+      req.body;
 
     const resume = await prisma.resume.create({
       data: {
@@ -470,7 +473,8 @@ app.post("/api/resumes", authMiddleware, async (req, res) => {
 app.put("/api/resumes/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, personalInfo, experience, education, skills, status } = req.body;
+    const { title, personalInfo, experience, education, skills, status } =
+      req.body;
 
     // Проверяем владельца
     const existingResume = await prisma.resume.findUnique({ where: { id } });
@@ -548,12 +552,12 @@ app.delete("/api/resumes/:id", authMiddleware, async (req, res) => {
 });
 
 // Отправка приглашения на собеседование
-app.post('/api/invitations', async (req, res) => {
+app.post("/api/invitations", async (req, res) => {
   try {
     const { resumeId, hrName, hrEmail, message } = req.body;
 
     if (!resumeId || !hrName || !hrEmail || !message) {
-      return res.status(400).json({ error: 'Все поля обязательны' });
+      return res.status(400).json({ error: "Все поля обязательны" });
     }
 
     // Находим резюме, чтобы убедиться, что оно существует
@@ -562,7 +566,7 @@ app.post('/api/invitations', async (req, res) => {
     });
 
     if (!resume) {
-      return res.status(404).json({ error: 'Резюме не найдено' });
+      return res.status(404).json({ error: "Резюме не найдено" });
     }
 
     // Сохраняем приглашение в базу
@@ -577,17 +581,49 @@ app.post('/api/invitations', async (req, res) => {
 
     console.log(`📩 Новое приглашение для резюме ${resumeId} от ${hrEmail}`);
 
-    // TODO: Здесь позже будет отправка email
+    // Отправляем email автору резюме
+    try {
+      const resumeOwner = await prisma.user.findUnique({
+        where: { id: resume.userId },
+        select: { email: true, name: true },
+      });
+
+      if (resumeOwner && resumeOwner.email) {
+        const result = await resend.emails.send({
+          from: "Resume Builder <onboarding@resend.dev>",
+          to: resumeOwner.email,
+          subject: `Новое приглашение на собеседование от ${hrName}`,
+          html: `
+    <h2>Вас приглашают на собеседование!</h2>
+    <p><strong>От кого:</strong> ${hrName} (${hrEmail})</p>
+    <p><strong>Резюме:</strong> ${resume.title}</p>
+    <p><strong>Сообщение:</strong></p>
+    <p>${message}</p>
+    <hr />
+    <p>Это письмо отправлено автоматически с вашего Resume Builder.</p>
+  `,
+        });
+
+        // ✅ ВОТ ЗДЕСЬ ПРОВЕРКА
+        if (result.error) {
+          console.error("❌ Resend вернул ошибку:", result.error);
+        } else {
+          console.log("✉️ Email реально отправлен, ID:", result.data?.id);
+        }
+      }
+    } catch (emailError) {
+      console.error("❌ Ошибка в блоке email:", emailError);
+    }
 
     res.json({ success: true, invitation });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
 // Получение всех приглашений для текущего пользователя
-app.get('/api/invitations', authMiddleware, async (req, res) => {
+app.get("/api/invitations", authMiddleware, async (req, res) => {
   try {
     // Находим все резюме пользователя
     const resumes = await prisma.resume.findMany({
@@ -600,7 +636,7 @@ app.get('/api/invitations', authMiddleware, async (req, res) => {
     // Находим все приглашения для этих резюме
     const invitations = await prisma.invitation.findMany({
       where: { resumeId: { in: resumeIds } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         resume: {
           select: { title: true },
@@ -611,7 +647,7 @@ app.get('/api/invitations', authMiddleware, async (req, res) => {
     res.json(invitations);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 
