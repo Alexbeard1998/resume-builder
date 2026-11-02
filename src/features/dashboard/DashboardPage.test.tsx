@@ -7,6 +7,8 @@ import dashboardReducer from "./dashboardSlice";
 import authReducer from "../auth/authSlice";
 import resumeReducer from "../resume/resumeSlice";
 import { DashboardPage } from "./DashboardPage";
+import invitationsReducer from "../invitations/invitationsSlice";
+import analyticsReducer from "../analytics/analyticsSlice";
 
 // ===== MOCK api =====
 vi.mock("../../api/client", () => ({
@@ -32,6 +34,8 @@ const renderDashboardPage = () => {
       dashboard: dashboardReducer,
       auth: authReducer,
       resume: resumeReducer,
+      invitations: invitationsReducer,
+      analytics: analyticsReducer, 
     },
     preloadedState: {
       auth: {

@@ -366,6 +366,12 @@ app.get("/api/public/resume/:username", async (req, res) => {
 
     const resume = user.resumes[0];
 
+    prisma.resumeView
+      .create({
+        data: { resumeId: resume.id },
+      })
+      .catch((err) => console.error("Ошибка записи просмотра:", err));
+
     res.json({
       user: {
         name: user.name,
@@ -648,6 +654,38 @@ app.get("/api/invitations", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
+
+// Получение статистики для текущего пользователя
+app.get('/api/analytics', authMiddleware, async (req, res) => {
+  try {
+    // Находим все резюме пользователя
+    const resumes = await prisma.resume.findMany({
+      where: { userId: req.userId },
+      select: { id: true },
+    });
+
+    const resumeIds = resumes.map((r) => r.id);
+
+    // Считаем просмотры и приглашения
+    const [totalViews, totalInvitations] = await Promise.all([
+      prisma.resumeView.count({
+        where: { resumeId: { in: resumeIds } },
+      }),
+      prisma.invitation.count({
+        where: { resumeId: { in: resumeIds } },
+      }),
+    ]);
+
+    res.json({
+      totalViews,
+      totalInvitations,
+      totalResumes: resumes.length,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 

@@ -4,6 +4,8 @@ import resumeReducer from "../features/resume/resumeSlice";
 import dashboardReducer from "../features/dashboard/dashboardSlice";
 import exploreReducer from "../features/explore/exploreSlice";
 import invitationsReducer from "../features/invitations/invitationsSlice";
+import analyticsReducer from "../features/analytics/analyticsSlice";
+
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +14,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     explore: exploreReducer,
     invitations: invitationsReducer,
+    analytics: analyticsReducer, 
   },
 });
 

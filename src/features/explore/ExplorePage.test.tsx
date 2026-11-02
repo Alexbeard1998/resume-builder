@@ -8,6 +8,7 @@ import exploreReducer from "./exploreSlice";
 import authReducer from "../auth/authSlice";
 import { ExplorePage } from "./ExplorePage";
 
+
 // ===== MOCK api =====
 vi.mock("../../api/client", () => ({
   api: {
@@ -102,9 +103,7 @@ describe("ExplorePage", () => {
       vi.mocked(api.getPublicResumes).mockResolvedValue(emptyResponse);
       renderExplorePage();
 
-      expect(
-        await screen.findByRole("heading", { name: /каталог резюме/i }),
-      ).toBeInTheDocument();
+      expect(await screen.findByText(/публичные резюме/i)).toBeInTheDocument();
     });
 
     it("должен вызвать API при монтировании", async () => {

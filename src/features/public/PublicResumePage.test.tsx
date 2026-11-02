@@ -9,6 +9,12 @@ vi.mock("../../api/client", () => ({
     getPublicResume: vi.fn(),
   },
 }));
+// ===== MOCK useToast =====
+vi.mock("../../components/ui/ToastContext", () => ({
+  useToast: () => ({
+    showToast: vi.fn(),
+  }),
+}));
 
 import { api } from "../../api/client";
 

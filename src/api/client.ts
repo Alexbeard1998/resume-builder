@@ -238,4 +238,16 @@ export const api = {
   const res = await fetchWithAuth(`${API_URL}/invitations`);
   return handleResponse(res);
 },
+
+// async trackResumeView(resumeId: string) {
+//   const res = await fetch(`${API_URL}/public/resume/${resumeId}/view`, {
+//     method: "POST",
+//   });
+//   return handleResponse(res);
+// },
+
+async getAnalytics() {
+  const res = await fetchWithAuth(`${API_URL}/analytics`);
+  return handleResponse(res);
+},
 };

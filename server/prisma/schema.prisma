@@ -34,6 +34,7 @@ model Resume {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   invitations  Invitation[]
+  views        ResumeView[] 
 }
 
 model Invitation {
@@ -44,4 +45,11 @@ model Invitation {
   resumeId   String
   resume     Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+}
+
+model ResumeView {
+  id        String   @id @default(cuid())
+  resumeId  String
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }

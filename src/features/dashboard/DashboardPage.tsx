@@ -10,6 +10,7 @@ import { deleteResume } from "../resume/resumeSlice";
 import { Modal } from "../../components/ui/Modal";
 import { withToast } from "../../utils/withToast";
 import { fetchInvitations } from "../invitations/invitationsSlice";
+import { fetchAnalytics } from "../analytics/analyticsSlice";
 
 export const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -20,6 +21,8 @@ export const DashboardPage = () => {
   const { invitations, status: invStatus } = useAppSelector(
     (state) => state.invitations,
   );
+  const { data: analytics } = useAppSelector((state) => state.analytics);
+
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -27,15 +30,12 @@ export const DashboardPage = () => {
 
   useEffect(() => {
     if (user?.id) {
+       dispatch(fetchResumes());
       dispatch(fetchInvitations());
+      dispatch(fetchAnalytics());
     }
   }, [user?.id, dispatch]);
 
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(fetchResumes());
-    }
-  }, [user?.id, dispatch]);
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -115,11 +115,7 @@ export const DashboardPage = () => {
             }`}
           >
             Приглашения
-            {invitations.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
-                {invitations.length}
-              </span>
-            )}
+            
           </button>
         </div>
         {status === "loading" && <DashboardSkeleton />}
@@ -145,6 +141,7 @@ export const DashboardPage = () => {
           status === "succeeded" &&
           resumes.length > 0 && (
             <>
+           
               {/* Статистика */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="card">
@@ -172,6 +169,27 @@ export const DashboardPage = () => {
                   </p>
                 </div>
               </div>
+                 {analytics && (
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="card">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Всего просмотров
+                    </p>
+                    <p className="text-2xl font-bold text-blue-500">
+                      {analytics.totalViews}
+                    </p>
+                  </div>
+                  <div className="card">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Приглашений
+                    </p>
+                    <p className="text-2xl font-bold text-green-500">
+                      {analytics.totalInvitations}
+                    </p>
+                  </div>
+                
+                </div>
+              )}
 
               {/* Заголовок с кнопкой */}
               <div className="flex justify-between items-center mb-6">
