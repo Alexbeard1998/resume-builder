@@ -366,11 +366,25 @@ app.get("/api/public/resume/:username", async (req, res) => {
 
     const resume = user.resumes[0];
 
-    prisma.resumeView
-      .create({
-        data: { resumeId: resume.id },
-      })
-      .catch((err) => console.error("Ошибка записи просмотра:", err));
+    // Записываем просмотр (с защитой от спама и StrictMode)
+    try {
+      const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+
+      const recentView = await prisma.resumeView.findFirst({
+        where: {
+          resumeId: resume.id,
+          createdAt: { gte: oneMinuteAgo },
+        },
+      });
+
+      if (!recentView) {
+        await prisma.resumeView.create({
+          data: { resumeId: resume.id },
+        });
+      }
+    } catch (err) {
+      console.error("Ошибка записи просмотра:", err);
+    }
 
     res.json({
       user: {
@@ -658,34 +672,47 @@ app.get("/api/invitations", authMiddleware, async (req, res) => {
 });
 
 // Получение статистики для текущего пользователя
-app.get('/api/analytics', authMiddleware, async (req, res) => {
+app.get("/api/analytics", authMiddleware, async (req, res) => {
   try {
     // Находим все резюме пользователя
     const resumes = await prisma.resume.findMany({
       where: { userId: req.userId },
-      select: { id: true },
+      select: { id: true, title: true },
     });
 
     const resumeIds = resumes.map((r) => r.id);
 
-    // Считаем просмотры и приглашения
+    // Считаем общие просмотры и приглашения
     const [totalViews, totalInvitations] = await Promise.all([
-      prisma.resumeView.count({
-        where: { resumeId: { in: resumeIds } },
-      }),
-      prisma.invitation.count({
-        where: { resumeId: { in: resumeIds } },
-      }),
+      prisma.resumeView.count({ where: { resumeId: { in: resumeIds } } }),
+      prisma.invitation.count({ where: { resumeId: { in: resumeIds } } }),
     ]);
+
+    // Считаем просмотры и приглашения ПО КАЖДОМУ резюме
+    const perResumeStats = await Promise.all(
+      resumes.map(async (resume) => {
+        const [views, invitations] = await Promise.all([
+          prisma.resumeView.count({ where: { resumeId: resume.id } }),
+          prisma.invitation.count({ where: { resumeId: resume.id } }),
+        ]);
+        return {
+          id: resume.id,
+          title: resume.title,
+          views,
+          invitations,
+        };
+      }),
+    );
 
     res.json({
       totalViews,
       totalInvitations,
       totalResumes: resumes.length,
+      perResumeStats,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 

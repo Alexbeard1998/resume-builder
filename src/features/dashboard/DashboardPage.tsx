@@ -30,12 +30,11 @@ export const DashboardPage = () => {
 
   useEffect(() => {
     if (user?.id) {
-       dispatch(fetchResumes());
+      dispatch(fetchResumes());
       dispatch(fetchInvitations());
       dispatch(fetchAnalytics());
     }
   }, [user?.id, dispatch]);
-
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -115,7 +114,6 @@ export const DashboardPage = () => {
             }`}
           >
             Приглашения
-            
           </button>
         </div>
         {status === "loading" && <DashboardSkeleton />}
@@ -141,7 +139,6 @@ export const DashboardPage = () => {
           status === "succeeded" &&
           resumes.length > 0 && (
             <>
-           
               {/* Статистика */}
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="card">
@@ -169,8 +166,8 @@ export const DashboardPage = () => {
                   </p>
                 </div>
               </div>
-                 {analytics && (
-                <div className="grid grid-cols-3 gap-4 mb-6">
+              {analytics ? (
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="card">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Всего просмотров
@@ -187,7 +184,17 @@ export const DashboardPage = () => {
                       {analytics.totalInvitations}
                     </p>
                   </div>
-                
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="card animate-pulse">
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </div>
+                  <div className="card animate-pulse">
+                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </div>
                 </div>
               )}
 
@@ -232,6 +239,25 @@ export const DashboardPage = () => {
                       Обновлено:{" "}
                       {new Date(resume.updatedAt).toLocaleDateString()}
                     </p>
+                    {analytics ? (
+                      (() => {
+                        const stats = analytics.perResumeStats.find(
+                          (s) => s.id === resume.id,
+                        );
+                        if (!stats) return null;
+                        return (
+                          <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
+                            <span>👁️ {stats.views} просмотров</span>
+                            <span>📩 {stats.invitations} приглашений</span>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className="flex gap-4 mb-3">
+                        <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      </div>
+                    )}
 
                     {/* Кнопки управления */}
                     <div className="flex flex-col gap-2 mt-auto">

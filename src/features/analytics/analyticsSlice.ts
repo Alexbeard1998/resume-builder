@@ -1,12 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { api } from "../../api/client";
 
+export interface PerResumeStats {
+  id: string;
+  title: string;
+  views: number;
+  invitations: number;
+}
+
 interface AnalyticsData {
   totalViews: number;
   totalInvitations: number;
   totalResumes: number;
+  perResumeStats: PerResumeStats[];
 }
-
 interface AnalyticsState {
   data: AnalyticsData | null;
   status: "idle" | "loading" | "succeeded" | "failed";
