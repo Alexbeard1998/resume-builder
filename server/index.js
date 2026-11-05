@@ -716,6 +716,56 @@ app.get("/api/analytics", authMiddleware, async (req, res) => {
   }
 });
 
+// Статистика просмотров по дням (за последние 7 дней)
+app.get('/api/analytics/daily-views', authMiddleware, async (req, res) => {
+  try {
+    const resumes = await prisma.resume.findMany({
+      where: { userId: req.userId },
+      select: { id: true },
+    });
+
+    const resumeIds = resumes.map((r) => r.id);
+
+    //просмотры за последние 7 дней
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const views = await prisma.resumeView.findMany({
+      where: {
+        resumeId: { in: resumeIds },
+        createdAt: { gte: sevenDaysAgo },
+      },
+      select: { createdAt: true },
+    });
+
+    const viewsByDay = {};
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const day = date.toISOString().split('T')[0];
+      viewsByDay[day] = 0;
+    }
+
+    views.forEach((view) => {
+      const day = view.createdAt.toISOString().split('T')[0];
+      if (viewsByDay[day] !== undefined) {
+        viewsByDay[day]++;
+      }
+    });
+
+    // Преобразуем в массив для графика
+    const result = Object.entries(viewsByDay).map(([date, count]) => ({
+      date,
+      views: count,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

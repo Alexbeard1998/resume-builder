@@ -250,4 +250,9 @@ async getAnalytics() {
   const res = await fetchWithAuth(`${API_URL}/analytics`);
   return handleResponse(res);
 },
+
+async getDailyViews() {
+  const res = await fetchWithAuth(`${API_URL}/analytics/daily-views`);
+  return handleResponse(res);
+},
 };

@@ -10,7 +10,16 @@ import { deleteResume } from "../resume/resumeSlice";
 import { Modal } from "../../components/ui/Modal";
 import { withToast } from "../../utils/withToast";
 import { fetchInvitations } from "../invitations/invitationsSlice";
-import { fetchAnalytics } from "../analytics/analyticsSlice";
+import { fetchAnalytics, fetchDailyViews } from "../analytics/analyticsSlice";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export const DashboardPage = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -22,6 +31,7 @@ export const DashboardPage = () => {
     (state) => state.invitations,
   );
   const { data: analytics } = useAppSelector((state) => state.analytics);
+  const { dailyViews } = useAppSelector((state) => state.analytics);
 
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
   const dispatch = useAppDispatch();
@@ -33,6 +43,7 @@ export const DashboardPage = () => {
       dispatch(fetchResumes());
       dispatch(fetchInvitations());
       dispatch(fetchAnalytics());
+      dispatch(fetchDailyViews());
     }
   }, [user?.id, dispatch]);
 
@@ -194,6 +205,55 @@ export const DashboardPage = () => {
                   <div className="card animate-pulse">
                     <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
                     <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </div>
+                </div>
+              )}
+              {dailyViews.length > 0 && (
+                <div className="card mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                    Просмотры за 7 дней
+                  </h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={dailyViews}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#9ca3af"
+                          tickFormatter={(value) =>
+                            new Date(value).toLocaleDateString("ru-RU", {
+                              day: "numeric",
+                              month: "short",
+                            })
+                          }
+                        />
+                        <YAxis stroke="#9ca3af" allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#1f2937",
+                            border: "none",
+                            borderRadius: "8px",
+                          }}
+                          labelStyle={{ color: "#e5e7eb" }}
+                          formatter={(value) => [Number(value), "Просмотры"]}
+                          labelFormatter={(label) =>
+                            label
+                              ? new Date(label as string).toLocaleDateString(
+                                  "ru-RU",
+                                )
+                              : ""
+                          }
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="views"
+                          stroke="#2DD4BF"
+                          strokeWidth={2}
+                          dot={{ fill: "#2DD4BF", r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               )}

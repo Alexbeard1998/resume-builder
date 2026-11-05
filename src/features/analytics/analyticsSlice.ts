@@ -14,23 +14,34 @@ interface AnalyticsData {
   totalResumes: number;
   perResumeStats: PerResumeStats[];
 }
+
+export interface DailyView {
+  date: string;
+  views: number;
+}
 interface AnalyticsState {
   data: AnalyticsData | null;
+  dailyViews: DailyView[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
 
 const initialState: AnalyticsState = {
   data: null,
+  dailyViews: [],
   status: "idle",
   error: null,
 };
 
-export const fetchAnalytics = createAsyncThunk(
-  "analytics/fetch",
+export const fetchAnalytics = createAsyncThunk("analytics/fetch", async () => {
+  return api.getAnalytics();
+});
+
+export const fetchDailyViews = createAsyncThunk(
+  "analytics/fetchDailyViews",
   async () => {
-    return api.getAnalytics();
-  }
+    return api.getDailyViews();
+  },
 );
 
 const analyticsSlice = createSlice({
@@ -49,6 +60,9 @@ const analyticsSlice = createSlice({
       .addCase(fetchAnalytics.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Ошибка загрузки";
+      })
+      .addCase(fetchDailyViews.fulfilled, (state, action) => {
+        state.dailyViews = action.payload;
       });
   },
 });
