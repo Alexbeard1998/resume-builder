@@ -12,7 +12,6 @@ vi.mock("../../api/client", () => ({
   },
 }));
 
-import { api } from "../../api/client";
 
 // ===== Мок-данные =====
 const mockAnalyticsData = {

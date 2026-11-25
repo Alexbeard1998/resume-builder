@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { RouterProvider } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { store } from './app/store';
 import { router } from './app/router';
 import './index.css';
 import { ToastProvider } from './components/ui/Toast';
+import { PageLoader } from './components/ui/PageLoader';
 
 
 const savedTheme = localStorage.getItem("theme");
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <ToastProvider>
-        <RouterProvider router={router} />
+       <Suspense fallback={<PageLoader />}>
+  <RouterProvider router={router} />
+</Suspense>
       </ToastProvider>
     </Provider>
   </StrictMode>
