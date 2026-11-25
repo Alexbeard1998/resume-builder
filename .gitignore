@@ -50,3 +50,7 @@ server/.env
 
 # Vite
 .vite/
+
+
+#заметки
+architecture.txt

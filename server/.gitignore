@@ -1,3 +1,17 @@
+# Зависимости
 node_modules/
+
+# Переменные окружения (бэкенд)
 .env
+.env.local
+
+# База данных SQLite
+*.db
+*.db-journal
 prisma/dev.db
+
+# Логи
+*.log
+
+# Заметки
+architecture.txt

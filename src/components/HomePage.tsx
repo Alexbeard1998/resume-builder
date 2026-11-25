@@ -1,7 +1,11 @@
-import { useAppSelector } from '../app/hooks';
-import { DashboardPage } from '../features/dashboard/DashboardPage';
-import { ExplorePage } from '../features/explore/ExplorePage';
-
+import { lazy, Suspense } from "react";
+import { useAppSelector } from "../app/hooks";
+const DashboardPage = lazy(() =>
+  import("../features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage }))
+);
+const ExplorePage = lazy(() =>
+  import("../features/explore/ExplorePage").then((m) => ({ default: m.ExplorePage }))
+);
 /**
  * Главная страница.
  * - Если авторизован → дашборд
@@ -10,5 +14,9 @@ import { ExplorePage } from '../features/explore/ExplorePage';
 export const HomePage = () => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
-  return isAuthenticated ? <DashboardPage /> : <ExplorePage />;
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      {isAuthenticated ? <DashboardPage /> : <ExplorePage />}
+    </Suspense>
+  );
 };
